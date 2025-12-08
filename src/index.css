@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+@theme {
+  --font-primary: "Nunito", sans-serif;
+  --font-poppins: "poppins", sans-serif;
+  --bg-hero-pattern: url('/src/assets/auth-image.png');
+  --color-primary: #030229;
+  --color-secondary: #605BFF;
+
+}
+
+html *,
+html *::before,
+html *::after {
+  -webkit-box-sizing: inherit;
+  box-sizing: inherit;
+  margin: 0;
+  padding: 0;
+}
