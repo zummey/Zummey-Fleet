@@ -1,3 +1,12 @@
+html *,
+html *::before,
+html *::after {
+  -webkit-box-sizing: inherit;
+  box-sizing: inherit;
+  box-sizing: border-box;
+}
+
+
 @import "tailwindcss";
 
 @theme {
@@ -9,11 +18,10 @@
 
 }
 
-html *,
-html *::before,
-html *::after {
-  -webkit-box-sizing: inherit;
-  box-sizing: inherit;
-  margin: 0;
-  padding: 0;
+.form-inner{
+  @apply flex flex-col gap-2 mb-3
+}
+
+.signin-input{
+  @apply bg-[#F7F7F8] py-2 rounded-lg pl-4 placeholder-[#979797] placeholder:text-sm
 }

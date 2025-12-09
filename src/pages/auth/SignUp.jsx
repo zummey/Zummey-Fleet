@@ -1,60 +1,84 @@
-import React from 'react'
-import { useForm } from 'react-hook-form'
-import logo from "../../assets/logo.png"
+import React from "react";
+import { useForm } from "react-hook-form";
+import logo from "../../assets/logo.png";
+import line from "../../assets/line.png";
 import { FcGoogle } from "react-icons/fc";
 
 const SignUp = () => {
-    const {register, handleSubmit, formState: {errors}} = useForm()
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
 
-    const onSubmit = (data) => console.log(data)
+  const onSubmit = (data) => console.log(data);
 
   return (
-    <div className="signup-container flex justify-center">
-        <div className="signup-wrapper w-[80%]">
-            <img src={logo} alt="Zummey Logo" />
-
-            <h4>Sign Up</h4>
+    <div className="signup-container flex justify-center items-center">
+      <div className="signup-wrapper w-[70%]">
+        <div className="signup-cen flex flex-col items-center gap-3 font-poppins">
+          <img src={logo} alt="Zummey Logo" className="w-[60px] ml-5" />
+          <h4 className="font-semibold text-[1.2rem]">Sign Up</h4>
+          <div className="google flex items-center justify-center gap-1 bg-[#F7F7F8] w-[100%] py-2.5 rounded-lg cursor-pointer">
             <FcGoogle />
             <p>Google</p>
-            <p>Or</p>
-
-            <form onSubmit={handleSubmit(onSubmit)} className=''>
-                <div className="fullname">
-                    <label htmlFor="fullname">Full Name</label>
-                    <input type="text" name='fullname' id='fullname'/>
-                </div>
-                <div className="email">
-                    <label htmlFor="email">Email Address</label>
-                    <input type="email" name='email' id='email' />
-                </div>
-                <div className="company">
-                    <label htmlFor="companyname">Company/Fleet Name</label>
-                    <input type="text" name='companyname' id='companyname' />
-                </div>
-                <div className="number">
-                    <label htmlFor="phonenum">Phone number</label>
-                    <input type="tel" name='phonenum' id='phonenum'/>
-                </div>
-                <div className="password">
-                    <label htmlFor="password">Password</label>
-                    <input type="password" name='password' id='password'/>
-                </div>
-                <div className="confirmpass">
-                    <label htmlFor="confirmpass">Confirm Password</label>
-                    <input type="password" name='confirmpass' id='confirmpass'/>
-                </div>
-                <div className="terms">
-                    <input type="checkbox" name='terms' id='terms'/>
-                    <label htmlFor="terms">By creating an account you agree to the <span className='text-secondary underline-offset-2'>terms of use</span> and our <span className='text-secondary underline-offset-2'>privacy policy</span></label>
-                </div>
-
-                <button type='submit'>Sign Up</button>
-            </form>
-
-            <p>Already have an account? <span className='text-secondary'>Log in</span></p>
+          </div>
+          <div className="or flex items-center gap-3">
+            <img src={line} alt="" />
+            <p className="font-semibold">Or</p>
+            <img src={line} alt="" />
+          </div>
         </div>
-    </div>
-  )
-}
 
-export default SignUp
+        <form onSubmit={handleSubmit(onSubmit)} className="mt-5 font-primary font-medium">
+          <div className="fullname form-inner">
+            <label htmlFor="fullname">Full Name</label>
+            <input type="text" name="fullname" id="fullname" placeholder="John Doe" className="signin-input "/>
+          </div>
+          <div className="email form-inner">
+            <label htmlFor="email">Email Address</label>
+            <input type="email" name="email" placeholder="example@gmail.com" id="email" className="signin-input"/>
+          </div>
+          <div className="company form-inner">
+            <label htmlFor="companyname">Company/Fleet Name</label>
+            <input type="text" name="companyname" placeholder="John doe fleet" id="companyname" className="signin-input"/>
+          </div>
+          <div className="number form-inner">
+            <label htmlFor="phonenum">Phone number</label>
+            <input type="tel" name="phonenum" placeholder="234-xxxx-xxx" id="phonenum" className="signin-input"/>
+          </div>
+          <div className="password form-inner">
+            <label htmlFor="password">Password</label>
+            <input type="password" name="password" placeholder="Input Password" id="password" className="signin-input"/>
+          </div>
+          <div className="confirmpass form-inner">
+            <label htmlFor="confirmpass">Confirm Password</label>
+            <input type="password" name="confirmpass" placeholder="Input Password" id="confirmpass" className="signin-input"/>
+          </div>
+          <div className="terms mt-4 mb-4">
+            <input type="checkbox" name="terms" id="terms" className=""/>
+            <label htmlFor="terms" className="ml-2">
+              By creating an account you agree to the{" "}
+              <span className="text-secondary underline underline-offset-2 cursor-pointer">
+                terms of use
+              </span>{" "}
+              and our{" "}
+              <span className="text-secondary underline underline-offset-2 cursor-pointer">
+                privacy policy
+              </span>
+            </label>
+          </div>
+
+          <button type="submit" className="mb-4 bg-primary w-[100%] text-white rounded-lg py-2.5 cursor-pointer font-semibold">Sign Up</button>
+        </form>
+
+        <p className="text-center">
+          Already have an account?{" "}
+          <span className="text-secondary">Log in</span>
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export default SignUp;
