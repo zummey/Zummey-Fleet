@@ -2,6 +2,9 @@ import React from "react";
 import { Route, Routes } from "react-router-dom";
 import AuthLayout from "../components/Layouts/AuthLayout";
 import SignUp from "../pages/auth/SignUp";
+import Login from "../pages/auth/Login";
+import ResetPassword from "../pages/auth/ResetPassword";
+import ResetPasswordMain from "../pages/auth/ResetPasswordMain";
 
 
 const AppRoutes = () => {
@@ -11,7 +14,10 @@ const AppRoutes = () => {
         <Routes>
           <Route element={<AuthLayout/>}>
             <Route path="/" element={<SignUp/>}/>
+            <Route path="/login" element={<Login/>} />
           </Route>
+          <Route path='/reset_password' element={<ResetPassword/>}/>
+          <Route path="/reset_main" element={<ResetPasswordMain/>}/>
         </Routes>
       </div>
     </div>

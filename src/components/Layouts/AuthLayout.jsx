@@ -11,7 +11,7 @@ const AuthLayout = () => {
 
        
         <div className="right_form_section  bg-[url('/src/assets/auth-image.png')] bg-cover bg-no-repeat  w-[45%] bg-[center_30%] flex  justify-center">
-          <h1 className="text-white text-3xl font-bold text-center flex items-center font-poppins max-w-[40%]  h-screen fixed">
+          <h1 className="text-white text-3xl font-bold text-center flex items-center font-poppins max-w-[40%]  h-screen fixed ">
             “Simplify, Track, and Optimize – All in One Dashboard”
           </h1>
         </div>

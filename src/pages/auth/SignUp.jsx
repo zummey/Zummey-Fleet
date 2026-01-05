@@ -1,8 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import logo from "../../assets/logo.png";
 import line from "../../assets/line.png";
 import { FcGoogle } from "react-icons/fc";
+import { FaEyeSlash } from "react-icons/fa6";
+import { IoMdEye } from "react-icons/io";
+import EmailVerificationModal from "../../components/Modal/EmailVerificationModal";
+import EmailVerifiedScreen from "../../components/Modal/EmailVerifiedScreen";
+import PasswordInput from "../../components/Ui/PasswordInput";
 
 const SignUp = () => {
   const {
@@ -12,9 +17,13 @@ const SignUp = () => {
   } = useForm();
 
   const onSubmit = (data) => console.log(data);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   return (
     <div className="signup-container flex justify-center items-center">
+      {/* <EmailVerificationModal/> */}
+      {/* <EmailVerifiedScreen/> */}
       <div className="signup-wrapper w-[70%]">
         <div className="signup-cen flex flex-col items-center gap-3 font-poppins">
           <img src={logo} alt="Zummey Logo" className="w-[60px] ml-5" />
@@ -48,12 +57,24 @@ const SignUp = () => {
             <input type="tel" name="phonenum" placeholder="234-xxxx-xxx" id="phonenum" className="signin-input"/>
           </div>
           <div className="password form-inner">
-            <label htmlFor="password">Password</label>
-            <input type="password" name="password" placeholder="Input Password" id="password" className="signin-input"/>
+            <div className="pass-wrap relative">
+              <PasswordInput
+                label="Password"
+                name="password"
+                register={register}
+                errors={errors}
+                placeholder="Enter your password"
+              />
+            </div>
           </div>
           <div className="confirmpass form-inner">
-            <label htmlFor="confirmpass">Confirm Password</label>
-            <input type="password" name="confirmpass" placeholder="Input Password" id="confirmpass" className="signin-input"/>
+            <PasswordInput
+              label="Confirm Password"
+              name="confirmpass"
+              register={register}
+              errors={errors}
+              placeholder="Confirm Password"
+            />       
           </div>
           <div className="terms mt-4 mb-4">
             <input type="checkbox" name="terms" id="terms" className=""/>
