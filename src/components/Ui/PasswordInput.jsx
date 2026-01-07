@@ -3,7 +3,7 @@ import { FaEyeSlash } from "react-icons/fa6";
 import { IoMdEye } from "react-icons/io";
 
 
-const PasswordInput = ({ label, name, register, errors, placeholder }) => {
+const PasswordInput = ({ label, name, register, errors, placeholder, rules = {} }) => {
 
   const [showPassword, setShowPassword] = useState(false);
 
@@ -16,7 +16,7 @@ const PasswordInput = ({ label, name, register, errors, placeholder }) => {
           id={name}
           placeholder={placeholder}
           className="signin-input text-[#979797] w-[100%]"
-          {...register(name, { required: `${label} is required` })}
+          {...register(name, { required: `${label} is required`, ...rules })}
         />
         {showPassword ? (
           <IoMdEye

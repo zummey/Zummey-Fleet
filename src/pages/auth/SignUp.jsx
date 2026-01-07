@@ -8,17 +8,37 @@ import { IoMdEye } from "react-icons/io";
 import EmailVerificationModal from "../../components/Modal/EmailVerificationModal";
 import EmailVerifiedScreen from "../../components/Modal/EmailVerifiedScreen";
 import PasswordInput from "../../components/Ui/PasswordInput";
+import { useRegister } from "../../api/auth.mutations";
 
 const SignUp = () => {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm();
 
-  const onSubmit = (data) => console.log(data);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const { mutate, isPending, isError, error } = useRegister();
+
+  const onSubmit = (formData) => {
+    const payload = {
+      user_type: "Fleet",
+      full_name: formData.full_name,
+      company_name: formData.company_name,
+      password: formData.password,
+      email: formData.email,
+      phone_number: formData.phone_number,
+    };
+
+    mutate(payload, {
+      onSuccess: (response) => {
+        console.log("Registration successful:", response);
+      },
+      onError: (response) => {
+        console.error("Registration failed:", response);
+      },
+    });
+  };
 
   return (
     <div className="signup-container flex justify-center items-center">
@@ -39,22 +59,57 @@ const SignUp = () => {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="mt-5 font-primary font-medium">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="mt-5 font-primary font-medium"
+        >
           <div className="fullname form-inner">
             <label htmlFor="fullname">Full Name</label>
-            <input type="text" name="fullname" id="fullname" placeholder="John Doe" className="signin-input "/>
+            <input
+              type="text"
+              id="fullname"
+              placeholder="John Doe"
+              className="signin-input"
+              {...register("full_name", { required: "Full Name is required" })}
+            />
+            <p className="text-red-500">{errors.full_name?.message}</p>
           </div>
           <div className="email form-inner">
             <label htmlFor="email">Email Address</label>
-            <input type="email" name="email" placeholder="example@gmail.com" id="email" className="signin-input"/>
+            <input
+              type="email"
+              placeholder="example@gmail.com"
+              id="email"
+              className="signin-input"
+              {...register("email", { required: "Email is required" })}
+            />
+            <p className="text-red-500">{errors.email?.message}</p>
           </div>
           <div className="company form-inner">
             <label htmlFor="companyname">Company/Fleet Name</label>
-            <input type="text" name="companyname" placeholder="John doe fleet" id="companyname" className="signin-input"/>
+            <input
+              type="text"
+              placeholder="John doe fleet"
+              id="companyname"
+              className="signin-input"
+              {...register("company_name", {
+                required: "Company/Fleet Name is required",
+              })}
+            />
+            <p className="text-red-500">{errors.company_name?.message}</p>
           </div>
           <div className="number form-inner">
             <label htmlFor="phonenum">Phone number</label>
-            <input type="tel" name="phonenum" placeholder="234-xxxx-xxx" id="phonenum" className="signin-input"/>
+            <input
+              type="tel"
+              placeholder="234-xxxx-xxx"
+              id="phonenum"
+              className="signin-input"
+              {...register("phone_number", {
+                required: "Phone Number is required",
+              })}
+            />
+            <p className="text-red-500">{errors.phone_number?.message}</p>
           </div>
           <div className="password form-inner">
             <div className="pass-wrap relative">
@@ -74,10 +129,22 @@ const SignUp = () => {
               register={register}
               errors={errors}
               placeholder="Confirm Password"
-            />       
+              rules={{
+                validate: (value) =>
+                  value === watch("password") || "Passwords do not match",
+              }}
+            />
           </div>
           <div className="terms mt-4 mb-4">
-            <input type="checkbox" name="terms" id="terms" className=""/>
+            <input
+              type="checkbox"
+              name="terms"
+              id="terms"
+              {...register("terms", {
+                required: "You must agree to the terms and conditions",
+              })}
+              className=""
+            />
             <label htmlFor="terms" className="ml-2">
               By creating an account you agree to the{" "}
               <span className="text-secondary underline underline-offset-2 cursor-pointer">
@@ -88,9 +155,17 @@ const SignUp = () => {
                 privacy policy
               </span>
             </label>
+            {errors.terms && (
+              <p className="text-red-500">{errors.terms.message}</p>
+            )}
           </div>
 
-          <button type="submit" className="mb-4 bg-primary w-[100%] text-white rounded-lg py-2.5 cursor-pointer font-semibold">Sign Up</button>
+          <button
+            type="submit"
+            className="mb-4 bg-primary w-[100%] text-white rounded-lg py-2.5 cursor-pointer font-semibold"
+          >
+            Sign Up
+          </button>
         </form>
 
         <p className="text-center">
