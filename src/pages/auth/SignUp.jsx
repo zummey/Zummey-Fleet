@@ -9,41 +9,70 @@ import EmailVerificationModal from "../../components/Modal/EmailVerificationModa
 import EmailVerifiedScreen from "../../components/Modal/EmailVerifiedScreen";
 import PasswordInput from "../../components/Ui/PasswordInput";
 import { useRegister } from "../../api/auth.mutations";
+import { useVerifyEmailOtp } from "../../api/auth.mutations";
 
 const SignUp = () => {
+  //code to clear form after submission
+
   const {
     register,
     handleSubmit,
     watch,
+    reset,
     formState: { errors },
   } = useForm();
 
-  const { mutate, isPending, isError, error } = useRegister();
+  const {
+    mutate: registerUser,
+    isPending,
+    isError,
+    error,
+    isSuccess: isRegisterSuccess,
+  } = useRegister();
+
+  const { mutate: verifyEmail, isSuccess: isOtpVerified } = useVerifyEmailOtp();
+
+  const [serverError, setServerError] = useState("");
+  const [registeredEmail, setRegisteredEmail] = useState("");
 
   const onSubmit = (formData) => {
     const payload = {
       user_type: "Fleet",
-      full_name: formData.full_name,
-      company_name: formData.company_name,
-      password: formData.password,
       email: formData.email,
       phone_number: formData.phone_number,
+      password: formData.password,
+      full_name: formData.full_name,
+      company_name: formData.company_name,
     };
 
-    mutate(payload, {
+    registerUser(payload, {
       onSuccess: (response) => {
         console.log("Registration successful:", response);
+        setRegisteredEmail(formData.email);
+        reset();
       },
-      onError: (response) => {
-        console.error("Registration failed:", response);
+      onError: (error) => {
+        console.error("Registration failed:", error.response?.data);
+        setServerError(
+          error.response?.data?.responseMessage || "Registration failed",
+        );
       },
     });
   };
 
   return (
     <div className="signup-container flex justify-center items-center">
-      {/* <EmailVerificationModal/> */}
-      {/* <EmailVerifiedScreen/> */}
+      {/*  */}
+      {isRegisterSuccess && registeredEmail && !isOtpVerified && (
+        <EmailVerificationModal
+          email={registeredEmail}
+          onVerify={verifyEmail}
+          isLoading={isVerifying}
+        />
+      )}
+
+      {isOtpVerified && <EmailVerifiedScreen />}
+
       <div className="signup-wrapper w-[70%]">
         <div className="signup-cen flex flex-col items-center gap-3 font-poppins">
           <img src={logo} alt="Zummey Logo" className="w-[60px] ml-5" />
@@ -160,12 +189,35 @@ const SignUp = () => {
             )}
           </div>
 
-          <button
+          {isError && (
+            <p className="text-red-500 mb-4">
+              {serverError || "An error occurred during registration."}
+            </p>
+          )}
+
+          {isPending ? (
+            <button
+              type="submit"
+              disabled={isPending}
+              className="mb-4 bg-primary w-[100%] text-white rounded-lg py-2.5 cursor-pointer font-semibold"
+            >
+              Signing Up...
+            </button>
+          ) : (
+            <button
+              type="submit"
+              className="mb-4 bg-primary w-[100%] text-white rounded-lg py-2.5 cursor-pointer font-semibold"
+            >
+              Sign Up
+            </button>
+          )}
+
+          {/* <button
             type="submit"
             className="mb-4 bg-primary w-[100%] text-white rounded-lg py-2.5 cursor-pointer font-semibold"
           >
             Sign Up
-          </button>
+          </button> */}
         </form>
 
         <p className="text-center">
