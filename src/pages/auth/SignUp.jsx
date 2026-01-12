@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import logo from "../../assets/logo.png";
 import line from "../../assets/line.png";
@@ -8,8 +8,9 @@ import { IoMdEye } from "react-icons/io";
 import EmailVerificationModal from "../../components/Modal/EmailVerificationModal";
 import EmailVerifiedScreen from "../../components/Modal/EmailVerifiedScreen";
 import PasswordInput from "../../components/Ui/PasswordInput";
-import { useRegister } from "../../api/auth.mutations";
-import { useVerifyEmailOtp } from "../../api/auth.mutations";
+import { useRegister } from "../../api/auth.mutations"
+import { Link } from "react-router-dom";
+
 
 const SignUp = () => {
   //code to clear form after submission
@@ -30,10 +31,12 @@ const SignUp = () => {
     isSuccess: isRegisterSuccess,
   } = useRegister();
 
-  const { mutate: verifyEmail, isSuccess: isOtpVerified } = useVerifyEmailOtp();
+  
 
   const [serverError, setServerError] = useState("");
   const [registeredEmail, setRegisteredEmail] = useState("");
+
+
 
   const onSubmit = (formData) => {
     const payload = {
@@ -63,15 +66,11 @@ const SignUp = () => {
   return (
     <div className="signup-container flex justify-center items-center">
       {/*  */}
-      {isRegisterSuccess && registeredEmail && !isOtpVerified && (
+      {isRegisterSuccess && registeredEmail &&  (
         <EmailVerificationModal
-          email={registeredEmail}
-          onVerify={verifyEmail}
-          isLoading={isVerifying}
+          email={registeredEmail}    
         />
       )}
-
-      {isOtpVerified && <EmailVerifiedScreen />}
 
       <div className="signup-wrapper w-[70%]">
         <div className="signup-cen flex flex-col items-center gap-3 font-poppins">
@@ -219,11 +218,13 @@ const SignUp = () => {
             Sign Up
           </button> */}
         </form>
-
-        <p className="text-center">
-          Already have an account?{" "}
-          <span className="text-secondary">Log in</span>
-        </p>
+          
+        <Link to="/login">
+          <p className="text-center">
+            Already have an account?{" "}
+            <span className="text-secondary">Log in</span>
+          </p>
+        </Link>
       </div>
     </div>
   );

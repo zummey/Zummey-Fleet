@@ -1,5 +1,6 @@
 import React from 'react'
 import checkmail from "../../assets/checkmail.png";
+import { Link } from 'react-router-dom';
 
 const EmailVerifiedScreen = () => {
   return (
@@ -13,7 +14,7 @@ const EmailVerifiedScreen = () => {
             <p className="text-[0.8rem] max-w-[90%]">
               Your email has been successfully verified. You can now log in and start using the platform.
             </p>
-            <button className="bg-primary text-white w-[50%] py-2 rounded-lg cursor-pointer">Go to Login</button>
+            <Link to="/login" className='w-[100%]'><button className="bg-primary text-white w-[50%] py-2 rounded-lg cursor-pointer">Go to Login</button></Link>
           </div>
         </div>
       </div>
