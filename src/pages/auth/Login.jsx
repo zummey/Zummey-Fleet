@@ -1,18 +1,54 @@
-import React from "react";
 import { useForm } from "react-hook-form";
 import logo from "../../assets/logo.png";
 import line from "../../assets/line.png";
 import { FcGoogle } from "react-icons/fc";
 import { Link } from "react-router-dom";
+import { useLogin } from "../../api/auth.mutations";
+import { setAuth } from "../../auth/auth.store";
+import { useNavigate } from "react-router-dom";
+import PasswordInput from "../../components/Ui/PasswordInput";
 
 const Login = () => {
+  const navigate = useNavigate();
+
+  const { mutate, isPending, isError, error } = useLogin();
+
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm();
 
-  const onSubmit = (data) => console.log(data);
+  const onSubmit = (data) => {
+    mutate(data, {
+      onSuccess: (res) => {
+        console.log("LOGIN RAW RESPONSE 👉", res);
+
+        const details = res?.data?.responseDetails;
+
+        if (!details) {
+          console.error("Login succeeded but responseDetails is missing", res);
+          return;
+        }
+
+        const { tokenData, userData } = details;
+
+        console.log("ACCESS TOKEN 👉", tokenData.access);
+        console.log("REFRESH TOKEN 👉", tokenData.refresh);
+        console.log("USER DATA 👉", userData);
+
+        setAuth({
+          access: tokenData.access,
+          refresh: tokenData.refresh,
+          user: userData,
+        });
+
+        console.log("AUTH STATE SET SUCCESSFULLY ✅");
+
+        navigate("/dashboard");
+      },
+    });
+  };
 
   return (
     <div className="signup-container flex justify-center items-center h-screen">
@@ -43,18 +79,23 @@ const Login = () => {
               placeholder="example@gmail.com"
               id="email"
               className="signin-input"
+              {...register("email", { required: "Email is required" })}
             />
           </div>
           <div className="password form-inner">
-            <label htmlFor="password">Password</label>
-            <input
-              type="password"
+            <PasswordInput
+              label="Password"
               name="password"
+              register={register}
+              errors={errors}
               placeholder="Input Password"
-              id="password"
-              className="signin-input"
             />
           </div>
+          {isError && (
+            <p className="text-red-500">
+              {error?.response?.data?.responseMessage}
+            </p>
+          )}
           <div className="terms mt-4 mb-4 flex">
             <input type="checkbox" name="terms" id="terms" className="" />
             <label
@@ -67,13 +108,13 @@ const Login = () => {
               </span>
             </label>
           </div>
-          
 
           <button
+            disabled={isPending}
             type="submit"
             className="mb-4 bg-primary w-[100%] text-white rounded-lg py-2.5 cursor-pointer font-semibold"
           >
-            Sign Up
+            {isPending ? "Logging in..." : "Login"}
           </button>
         </form>
 

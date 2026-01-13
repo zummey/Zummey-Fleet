@@ -106,7 +106,7 @@ const EmailVerificationModal = ({ email }) => {
       {isSuccess ? (
         <EmailVerifiedScreen />
       ) : (
-        <div className="absolute inset-0 z-10 flex items-center justify-center h-screen fixed">
+        <div className="inset-0 z-10 flex items-center justify-center h-screen fixed">
           <div className="absolute inset-0 bg-black opacity-30"></div>
 
           <div className="bg-white z-20 w-[35%] rounded-lg p-6 text-center font-poppins">
