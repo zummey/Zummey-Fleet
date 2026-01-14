@@ -21,7 +21,6 @@ const MainLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Navigation items for the sidebar
   const navItems = [
     {
       path: "/dashboard",
@@ -57,14 +56,13 @@ const MainLayout = () => {
     { path: "/help", icon: HelpCircle, label: "Help & Support" },
   ];
 
-  // Check if current path matches nav item
   const isActive = (path) => {
     return location.pathname === path || location.pathname.startsWith(path);
   };
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden font-poppins">
-      {/* Sidebar */}
+
       <aside
         className={`
           ${sidebarCollapsed ? "w-20" : "w-64"} 
@@ -73,7 +71,7 @@ const MainLayout = () => {
           relative z-50
         `}
       >
-        {/* Logo Section */}
+
         <div
           className={`flex items-center ${sidebarCollapsed ? "justify-center" : "justify-between"} px-4 py-5 border-b border-gray-100 min-h-[72px]`}
         >
@@ -108,7 +106,6 @@ const MainLayout = () => {
           </button>
         </div>
 
-        {/* Main Navigation */}
         <nav className="flex-1 overflow-y-auto px-3 py-4">
           <ul className="space-y-1">
             {navItems.map((item) => {
@@ -150,7 +147,6 @@ const MainLayout = () => {
           </ul>
         </nav>
 
-        {/* Bottom Navigation */}
         <nav className="px-3 py-4 border-t border-gray-100">
           <ul className="space-y-1">
             {bottomNavItems.map((item) => {
@@ -193,21 +189,16 @@ const MainLayout = () => {
         </nav>
       </aside>
 
-      {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
         <header className="bg-white border-b border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between gap-4">
-            {/* Left Section */}
             <div className="flex items-center gap-4">
               <h1 className="text-xl font-semibold text-gray-900">
                 Hello Nonso!
               </h1>
             </div>
 
-            {/* Center - Search Bar */}
 
-            {/* Right Section */}
             <div className="flex items-center gap-3">
               <div className="flex-1 max-w-xl">
                 <div className="relative">
@@ -242,7 +233,6 @@ const MainLayout = () => {
           </div>
         </header>
 
-        {/* Page Content */}
         <main className="flex-1 overflow-y-auto p-6 bg-gray-50">
           <Outlet />
         </main>
