@@ -8,6 +8,8 @@ import ResetPasswordMain from "../pages/auth/ResetPasswordMain";
 import ScrollToTop from "../ScrollToTop";
 import ProtectedRoute from "./ProtectedRoute";
 import Dashboard from "../pages/Dashboard/Dashboard";
+import MainLayout from "../components/Layouts/MainLayout";
+import FleetManagement from "../pages/FleetManagement/FleetManagement";
 
 const AppRoutes = () => {
   return (
@@ -19,8 +21,11 @@ const AppRoutes = () => {
               <Route path="/" element={<SignUp />} />
               <Route path="/login" element={<Login />} />
             </Route>
-            <Route element={<ProtectedRoute />}>
-              <Route path="/dashboard" element={<Dashboard />} />
+            <Route element={<MainLayout />}>
+              <Route element={<ProtectedRoute />}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/fleet-management" element={<FleetManagement />} />
+              </Route>
             </Route>
             <Route path="/reset_password" element={<ResetPassword />} />
             <Route path="/reset_main" element={<ResetPasswordMain />} />
