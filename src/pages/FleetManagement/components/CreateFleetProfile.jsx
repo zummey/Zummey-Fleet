@@ -47,7 +47,11 @@ const CreateFleetProfile = ({ onSuccess }) => {
       await createFleetProfile(form);
       onSuccess();
     } catch (error) {
-      setErrors({ submit: error.message || "Failed to create fleet profile" });
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.detail ||
+                          error.message || 
+                          "Failed to create fleet profile";
+      setErrors({ submit: errorMessage });
     } finally {
       setIsLoading(false);
     }
