@@ -20,7 +20,6 @@ const FleetManagement = () => {
         Array.isArray(res.data)
           ? res.data
           : res.data?.data || res.data?.results || res.data?.responseDetails?.results || [];
-
       setVehicles(vehicleList);
       setError(null);
     } catch (err) {
@@ -65,9 +64,7 @@ const FleetManagement = () => {
 
       {/* Error State */}
       {error && (
-        <div className="mt-4 rounded-lg bg-red-50 p-4 text-red-700">
-          Failed to load vehicles. Please try again.
-        </div>
+        <div className="text-red-600 bg-red-50 p-3 rounded">{error.message ? error.message : String(error)}</div>
       )}
 
       {/* Drawer */}

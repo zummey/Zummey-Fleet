@@ -68,6 +68,23 @@ const AddVehicle = ({ onClose, onSuccess }) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
+      // Create an optimistic vehicle object so the UI can show preview immediately
+      const tempId = `temp-${Date.now()}`;
+      const tempVehicle = {
+        id: tempId,
+        vehicle_name: formData.vehicle_name,
+        vehicle_make: formData.vehicle_make,
+        vehicle_licence_serial: formData.vehicle_licence_serial,
+        gps_tracker_serial: formData.gps_tracker_serial,
+        vehicle_type: formData.vehicle_type,
+        vehicle_color: formData.vehicle_color,
+        // provide preview image (data URL) for immediate display
+        _localImage: mainImagePreview || null,
+      };
+
+      // notify parent to optimistically add this vehicle
+      onSuccess && onSuccess(tempVehicle);
+
       // If no files/images are provided, send JSON matching backend fields.
       const hasMainImage = !!formData.main_image;
       const hasAdditionalImages = additionalImages.some(Boolean);
@@ -105,13 +122,16 @@ const AddVehicle = ({ onClose, onSuccess }) => {
 
         await createVehicle(fData);
       }
+      // On success, request parent to refresh full list (server canonical)
       setSubmitSuccess(true);
       setTimeout(() => {
         handleClose();
-        onSuccess();
+        onSuccess && onSuccess();
       }, 800);
     } catch (err) {
       console.error("Failed to create vehicle", err, err.response?.data);
+      // on failure, refresh to remove optimistic entry
+      onSuccess && onSuccess();
       setIsSubmitting(false);
     }
   };

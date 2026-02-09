@@ -1,5 +1,6 @@
 import { PencilLine, Trash, Trash2, UserPlus } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import defaultAvatar from "../../assets/avatar.png";
 
 const statusColors = {
   online: "bg-green-100 text-green-700",
@@ -24,8 +25,9 @@ const VehicleRow = ({ vehicle, onAssign, onEdit, onDelete }) => {
   }, []);
 
   const getImageUrl = () => {
+    // Prefer a local preview (optimistic), then server image fields, then default avatar
     return (
-      vehicle.image_url || vehicle.imageUrl || vehicle.main_image || vehicle.main_image_url || vehicle.thumbnail || vehicle.photo || null
+      vehicle._localImage || vehicle.image_url || vehicle.imageUrl || vehicle.main_image_url || vehicle.main_image || vehicle.thumbnail || vehicle.photo || defaultAvatar
     );
   };
 
@@ -61,8 +63,8 @@ const VehicleRow = ({ vehicle, onAssign, onEdit, onDelete }) => {
   const imgUrl = getImageUrl();
 
   return (
-    <tr className="bg-white shadow-sm">
-      <td className="p-3 first:rounded-l-lg">
+    <tr className="bg-white shadow-sm hover:shadow-md transition-shadow rounded-lg hover:bg-gray-100">
+      <td className=" first:rounded-l-lg">
         {imgUrl ? (
           <img src={imgUrl} alt={name} className="w-10 h-10 rounded-full object-cover" />
         ) : (

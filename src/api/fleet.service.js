@@ -34,18 +34,6 @@ export const getVehicles = () => {
   return api.get("/fleet/vehicles/");
 };
 
-// Vehicles (returns normalized array)
-export const getAllVehicles = async () => {
-  const response = await api.get("/fleet/vehicles/");
-  console.log("API Response:", response.data);
-  const data = response.data;
-  if (Array.isArray(data)) return data;
-  if (data?.results && Array.isArray(data.results)) return data.results;
-  if (data?.responseDetails?.results && Array.isArray(data.responseDetails.results)) return data.responseDetails.results;
-  if (data?.data && Array.isArray(data.data)) return data.data;
-  return [];
-};
-
 export const createVehicle = (data) => {
   // POST to the list-create endpoint.
   // If data is FormData, do not set Content-Type so the browser sets the multipart boundary.
