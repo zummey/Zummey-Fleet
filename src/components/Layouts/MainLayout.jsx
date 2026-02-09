@@ -21,6 +21,11 @@ const MainLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const user = JSON.parse(localStorage.getItem("user"));
+  const firstName = user?.fullName?.split(" ")?.[0] || "";
+
+  const initials = firstName.slice(0, 2).toUpperCase();
+
   const navItems = [
     {
       path: "/dashboard",
@@ -62,7 +67,6 @@ const MainLayout = () => {
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden font-poppins">
-
       <aside
         className={`
           ${sidebarCollapsed ? "w-20" : "w-64"} 
@@ -71,7 +75,6 @@ const MainLayout = () => {
           relative z-50
         `}
       >
-
         <div
           className={`flex items-center ${sidebarCollapsed ? "justify-center" : "justify-between"} px-4 py-5 border-b border-gray-100 min-h-[72px]`}
         >
@@ -194,10 +197,9 @@ const MainLayout = () => {
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <h1 className="text-xl font-semibold text-gray-900">
-                Hello Nonso!
+                Hello {firstName}!
               </h1>
             </div>
-
 
             <div className="flex items-center gap-3">
               <div className="flex-1 max-w-xl">
@@ -222,12 +224,8 @@ const MainLayout = () => {
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
               </button>
 
-              <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200 cursor-pointer hover:border-purple-500 transition-colors">
-                <img
-                  src="https://ui-avatars.com/api/?name=Nonso&background=FFF4E8&color=000"
-                  alt="User"
-                  className="w-full h-full object-cover"
-                />
+              <div className="w-10 h-10 rounded-full border-2 border-gray-200 cursor-pointer hover:border-[#EB4827] transition-colors flex items-center justify-center bg-[#FFF4E8] text-gray-900 font-semibold">
+                {initials || "?"}
               </div>
             </div>
           </div>

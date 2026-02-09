@@ -1,4 +1,4 @@
-import React, { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import checkmail from "../../assets/checkmail.png";
 import EmailVerifiedScreen from "./EmailVerifiedScreen";
 import { useVerifyEmailOtp, useResendEmailOtp } from "../../api/auth.mutations";

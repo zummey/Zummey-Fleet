@@ -7,7 +7,6 @@ import PasswordInput from "../../components/Ui/PasswordInput";
 const ResetPasswordMain = () => {
   const {
     register,
-    handleSubmit,
     formState: { errors },
   } = useForm();
 
