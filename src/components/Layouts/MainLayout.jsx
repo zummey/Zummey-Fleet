@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import Logo from "../../assets/logo.png";
+import { getNotifications } from "../../api/notifications.service";
 
 import {
   ChevronLeft,
@@ -18,6 +19,7 @@ import {
 
 const MainLayout = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -56,10 +58,36 @@ const MainLayout = () => {
   ];
 
   const bottomNavItems = [
-    { path: "/notifications", icon: Bell, label: "Notifications" },
+    {
+      path: "/notifications",
+      icon: Bell,
+      label: "Notifications",
+      badge: unreadNotifications > 99 ? "99+" : unreadNotifications || null,
+    },
     { path: "/settings", icon: Settings, label: "Settings", hasSubmenu: true },
     { path: "/help", icon: HelpCircle, label: "Help & Support" },
   ];
+
+  useEffect(() => {
+    const fetchUnreadNotifications = async () => {
+      try {
+        const data = await getNotifications();
+        if (typeof data?.unread_count === "number") {
+          setUnreadNotifications(data.unread_count);
+          return;
+        }
+        const list = Array.isArray(data) ? data : data?.results || data?.data || [];
+        const unread = list.filter((item) => !item?.is_read).length;
+        setUnreadNotifications(unread);
+      } catch {
+        // Keep UI stable if notifications endpoint fails temporarily.
+      }
+    };
+
+    fetchUnreadNotifications();
+    const poll = setInterval(fetchUnreadNotifications, 30000);
+    return () => clearInterval(poll);
+  }, [location.pathname]);
 
   const isActive = (path) => {
     return location.pathname === path || location.pathname.startsWith(path);
@@ -161,7 +189,7 @@ const MainLayout = () => {
                   <button
                     onClick={() => navigate(item.path)}
                     className={`
-                      w-full flex items-center gap-3 px-3.5 py-3 rounded-lg
+                      w-full flex items-center gap-3 px-3.5 py-3 rounded-lg relative
                       transition-all duration-200 text-sm font-medium
                       ${
                         active
@@ -171,11 +199,21 @@ const MainLayout = () => {
                     `}
                   >
                     <Icon size={20} className="flex-shrink-0" />
+                    {sidebarCollapsed && item.badge && (
+                      <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-semibold flex items-center justify-center">
+                        {item.badge}
+                      </span>
+                    )}
                     {!sidebarCollapsed && (
                       <>
                         <span className="flex-1 text-left whitespace-nowrap overflow-hidden text-ellipsis">
                           {item.label}
                         </span>
+                        {item.badge && (
+                          <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-red-500 text-white text-[11px] font-semibold flex items-center justify-center">
+                            {item.badge}
+                          </span>
+                        )}
                         {item.hasSubmenu && (
                           <ChevronRight
                             size={16}

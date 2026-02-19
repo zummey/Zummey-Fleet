@@ -63,7 +63,7 @@ const VehicleRow = ({ vehicle, onAssign, onEdit, onDelete }) => {
   const imgUrl = getImageUrl();
 
   return (
-    <tr className="bg-white shadow-sm hover:shadow-md transition-shadow rounded-lg hover:bg-gray-100">
+    <tr className="bg-white shadow-sm hover:shadow-md transition-shadow rounded-lg hover:bg-gray-100 animate-row-fade">
       <td className=" first:rounded-l-lg">
         {imgUrl ? (
           <img src={imgUrl} alt={name} className="w-10 h-10 rounded-full object-cover" />

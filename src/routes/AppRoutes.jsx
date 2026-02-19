@@ -10,6 +10,7 @@ import ProtectedRoute from "./ProtectedRoute";
 import Dashboard from "../pages/Dashboard/Dashboard";
 import MainLayout from "../components/Layouts/MainLayout";
 import FleetManagement from "../pages/FleetManagement/FleetManagement";
+import Notifications from "../pages/Notifications/Notifications";
 
 const AppRoutes = () => {
   return (
@@ -25,6 +26,7 @@ const AppRoutes = () => {
               <Route element={<ProtectedRoute />}>
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/fleet-management" element={<FleetManagement />} />
+                <Route path="/notifications" element={<Notifications />} />
               </Route>
             </Route>
             <Route path="/reset_password" element={<ResetPassword />} />

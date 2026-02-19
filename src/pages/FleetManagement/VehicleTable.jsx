@@ -1,6 +1,6 @@
 import VehicleRow from "./VehicleRow";
 
-const VehicleTable = ({ vehicles = [], loading }) => {
+const VehicleTable = ({ vehicles = [], loading, onAssign, onEdit, onDelete }) => {
   if (loading) return <p>Loading vehicles...</p>;
 
   if (!Array.isArray(vehicles) || vehicles.length === 0) {
@@ -27,7 +27,13 @@ const VehicleTable = ({ vehicles = [], loading }) => {
         </thead>
         <tbody>
           {vehicles.map((vehicle) => (
-            <VehicleRow key={vehicle.id} vehicle={vehicle} />
+            <VehicleRow
+              key={vehicle.id || vehicle.bike_id}
+              vehicle={vehicle}
+              onAssign={onAssign}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
           ))}
         </tbody>
         </table>
