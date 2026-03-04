@@ -4,7 +4,7 @@ import Logo from "../../assets/logo.png";
 import { getNotifications } from "../../api/notifications.service";
 
 import {
-  ChevronLeft,
+  ChevronDown,
   LayoutDashboard,
   Truck,
   Users,
@@ -19,7 +19,7 @@ import {
 
 const MainLayout = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [openSubmenu, setOpenSubmenu] = useState(null); // Track which submenu is open
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -49,6 +49,10 @@ const MainLayout = () => {
       icon: ClipboardList,
       label: "Order Management",
       hasSubmenu: true,
+      submenuItems: [
+        { path: "/order-management/track-orders", label: "Track Orders" },
+        { path: "/order-management/order-list", label: "Order List" },
+      ],
     },
     {
       path: "/finance-reports",
@@ -58,13 +62,17 @@ const MainLayout = () => {
   ];
 
   const bottomNavItems = [
+    { path: "/notifications", icon: Bell, label: "Notifications" },
     {
-      path: "/notifications",
-      icon: Bell,
-      label: "Notifications",
-      badge: unreadNotifications > 99 ? "99+" : unreadNotifications || null,
+      path: "/settings",
+      icon: Settings,
+      label: "Settings",
+      hasSubmenu: true,
+      submenuItems: [
+        { path: "/settings/profile", label: "Profile" },
+        { path: "/settings/security", label: "Security" },
+      ],
     },
-    { path: "/settings", icon: Settings, label: "Settings", hasSubmenu: true },
     { path: "/help", icon: HelpCircle, label: "Help & Support" },
   ];
 
@@ -91,6 +99,10 @@ const MainLayout = () => {
 
   const isActive = (path) => {
     return location.pathname === path || location.pathname.startsWith(path);
+  };
+
+  const toggleSubmenu = (path) => {
+    setOpenSubmenu(openSubmenu === path ? null : path);
   };
 
   return (
@@ -128,7 +140,7 @@ const MainLayout = () => {
               sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"
             }
           >
-            <ChevronLeft
+            <ChevronRight
               size={18}
               className={`text-gray-600 transition-transform duration-300 ${
                 sidebarCollapsed ? "rotate-180" : ""
@@ -142,17 +154,25 @@ const MainLayout = () => {
             {navItems.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.path);
+              const isSubmenuOpen = openSubmenu === item.path;
 
               return (
                 <li key={item.path}>
+                  {/* Main Menu Item */}
                   <button
-                    onClick={() => navigate(item.path)}
+                    onClick={() => {
+                      if (item.hasSubmenu) {
+                        toggleSubmenu(item.path);
+                      } else {
+                        navigate(item.path);
+                      }
+                    }}
                     className={`
                       w-full flex items-center gap-3 px-3.5 py-3 rounded-lg
                       transition-all duration-200 text-sm font-medium
                       ${
                         active
-                          ? "bg-[#FFF4E8] text-[#EB4827]"
+                          ? "bg-[#FFF4E8] text-[#EB4827] cursor-pointer"
                           : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                       }
                     `}
@@ -166,12 +186,42 @@ const MainLayout = () => {
                         {item.hasSubmenu && (
                           <ChevronRight
                             size={16}
-                            className="text-gray-400 flex-shrink-0"
+                            className={`text-gray-400 flex-shrink-0 transition-transform duration-200 ${
+                              isSubmenuOpen ? "rotate-90" : ""
+                            }`}
                           />
                         )}
                       </>
                     )}
                   </button>
+
+                  {/* Submenu */}
+                  {item.hasSubmenu && !sidebarCollapsed && isSubmenuOpen && (
+                    <ul className="mt-1 ml-4 space-y-1 border-l-2 border-gray-200 pl-4">
+                      {item.submenuItems.map((subItem) => {
+                        const subActive = location.pathname === subItem.path;
+
+                        return (
+                          <li key={subItem.path}>
+                            <button
+                              onClick={() => navigate(subItem.path)}
+                              className={`
+                                w-full text-left px-3 py-2 rounded-md text-sm
+                                transition-all duration-200
+                                ${
+                                  subActive
+                                    ? "text-[#EB4827] font-medium cursor-pointer"
+                                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                                }
+                              `}
+                            >
+                              {subItem.label}
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
                 </li>
               );
             })}
@@ -183,11 +233,19 @@ const MainLayout = () => {
             {bottomNavItems.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.path);
+              const isSubmenuOpen = openSubmenu === item.path;
 
               return (
                 <li key={item.path}>
+                  {/* Main Menu Item */}
                   <button
-                    onClick={() => navigate(item.path)}
+                    onClick={() => {
+                      if (item.hasSubmenu) {
+                        toggleSubmenu(item.path);
+                      } else {
+                        navigate(item.path);
+                      }
+                    }}
                     className={`
                       w-full flex items-center gap-3 px-3.5 py-3 rounded-lg relative
                       transition-all duration-200 text-sm font-medium
@@ -217,12 +275,42 @@ const MainLayout = () => {
                         {item.hasSubmenu && (
                           <ChevronRight
                             size={16}
-                            className="text-gray-400 flex-shrink-0"
+                            className={`text-gray-400 flex-shrink-0 transition-transform duration-200 ${
+                              isSubmenuOpen ? "rotate-90" : ""
+                            }`}
                           />
                         )}
                       </>
                     )}
                   </button>
+
+                  {/* Submenu */}
+                  {item.hasSubmenu && !sidebarCollapsed && isSubmenuOpen && (
+                    <ul className="mt-1 ml-4 space-y-1 border-l-2 border-gray-200 pl-4">
+                      {item.submenuItems.map((subItem) => {
+                        const subActive = location.pathname === subItem.path;
+
+                        return (
+                          <li key={subItem.path}>
+                            <button
+                              onClick={() => navigate(subItem.path)}
+                              className={`
+                                w-full text-left px-3 py-2 rounded-md text-sm
+                                transition-all duration-200
+                                ${
+                                  subActive
+                                    ? "bg-purple-50 text-purple-700 font-medium"
+                                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                                }
+                              `}
+                            >
+                              {subItem.label}
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
                 </li>
               );
             })}
