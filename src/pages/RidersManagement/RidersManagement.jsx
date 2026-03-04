@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertCircle, Filter, ChevronDown, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { AlertCircle, Filter, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import Car from '../../assets/car-01.png';
 import RiderDetailsModal from './modals/RiderDetailsModal';
 import DeleteRiderModal from './modals/DeleteRiderModal';
 import DeleteSuccessModal from './modals/DeleteSuccessModal';
+import RidersManagementSkeleton from './RidersManagementSkelecton';
 import { useGetRiders, useDeleteRider } from '../../api/authRiders.mutations';
 
 // Separate component so hooks (useGetRiderById) are called per-row, not inside a map
@@ -348,6 +349,11 @@ const RidersManagement = () => {
     }
   };
 
+  // ✅ SHOW SKELETON WHILE LOADING
+  if (ridersLoading) {
+    return <RidersManagementSkeleton />;
+  }
+
   return (
     <div className="space-y-6 font-poppins">
       {/* Header */}
@@ -417,12 +423,7 @@ const RidersManagement = () => {
       )}
 
       {/* Empty State or Riders List */}
-      {ridersLoading ? (
-        <div className="flex flex-col items-center justify-center py-20">
-          <Loader2 size={40} className="animate-spin text-[#1E2A5E] mb-3" />
-          <p className="text-gray-500 text-sm">Loading riders...</p>
-        </div>
-      ) : riders.length === 0 ? (
+      {riders.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20">
           <div className="w-14 h-24 flex items-center justify-center">
             <img src={Car} alt="Car" width={35} />

@@ -10,7 +10,8 @@ import {
 } from "lucide-react";
 import { useOngoingOrders } from "../../../api/dashboard.queries";
 import Vehicle from "../../../assets/vehicle.png";
-import FullScreenMapModal from "./FullScreenMapModal"; // Import the modal
+import FullScreenMapModal from "./FullScreenMapModal";
+import OrderListSkeleton from "./OrderListSkelecton";
 
 const ITEMS_PER_PAGE = 5;
 
@@ -19,7 +20,7 @@ const OrderList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [openDropdownId, setOpenDropdownId] = useState(null);
   
-  // NEW: Track Live Modal State
+  // Track Live Modal State
   const [trackingOrder, setTrackingOrder] = useState(null);
 
   // Filter states
@@ -109,7 +110,7 @@ const OrderList = () => {
     setCurrentPage(1);
   };
 
-  // NEW: Handle Track Live Click
+  // Handle Track Live Click
   const handleTrackLive = (order) => {
     console.log('🎯 Track Live clicked for:', order.request_id);
     setTrackingOrder(order);
@@ -156,12 +157,9 @@ const OrderList = () => {
 
   const activeFilterCount = getActiveFilterCount();
 
+  // ✅ SHOW SKELETON WHILE LOADING
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
+    return <OrderListSkeleton />;
   }
 
   if (isError) {
@@ -289,8 +287,6 @@ const OrderList = () => {
                           ...
                         </button>
 
-                        
-
                         {/* Dropdown Menu */}
                         {openDropdownId === order.request_id && (
                           <>
@@ -300,7 +296,6 @@ const OrderList = () => {
                             ></div>
 
                             <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-20">
-                              {/* ✅ UPDATED: Track Live Button */}
                               <button
                                 onClick={() => handleTrackLive(order)}
                                 className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors"
@@ -517,7 +512,7 @@ const OrderList = () => {
         )}
       </div>
 
-      {/* ✅ FULL SCREEN MAP MODAL */}
+      {/* FULL SCREEN MAP MODAL */}
       {trackingOrder && (
         <FullScreenMapModal
           orderData={trackingOrder}
