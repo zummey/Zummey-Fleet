@@ -10,6 +10,13 @@ import ProtectedRoute from "./ProtectedRoute";
 import Dashboard from "../pages/Dashboard/Dashboard";
 import MainLayout from "../components/Layouts/MainLayout";
 import FleetManagement from "../pages/FleetManagement/FleetManagement";
+import TrackOrders from "../pages/OngoingOrders/TrackOrders/TrackOrders";
+import OrderList from "../pages/OngoingOrders/OrderList/OrderList";
+import RidersManagement from "../pages/RidersManagement/RidersManagement";
+import Signup from "../pages/RidersManagement/AddRider/Signup";
+import PersonalInfo from "../pages/RidersManagement/AddRider/PersonalInfo";
+import LegalLicensing from "../pages/RidersManagement/AddRider/LegalLicensing";
+import DocumentUpload from "../pages/RidersManagement/AddRider/DocumentUpload";
 
 const AppRoutes = () => {
   return (
@@ -25,6 +32,13 @@ const AppRoutes = () => {
               <Route element={<ProtectedRoute />}>
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/fleet-management" element={<FleetManagement />} />
+                <Route path="/order-management/track-orders" element={<TrackOrders/>} />
+                <Route path="/order-management/order-list" element={<OrderList/>} />
+                <Route path="/riders-management" element={<RidersManagement/>} />
+                <Route path="/riders-management/add-rider/signup" element={<Signup/>} />
+                <Route path="/riders-management/add-rider/personal-info" element={<PersonalInfo/>} />
+                <Route path="/riders-management/add-rider/legal-licensing" element={<LegalLicensing/>} />
+                <Route path="/riders-management/add-rider/document-upload" element={<DocumentUpload/>} />
               </Route>
             </Route>
             <Route path="/reset_password" element={<ResetPassword />} />

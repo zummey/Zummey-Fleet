@@ -21,7 +21,7 @@ const OngoingOrder = () => {
   );
 
   // Limit to 3 orders for dashboard view
-  const limitedOrders = ongoingBackendOrders.slice(0, 3);
+  const limitedOrders = ongoingBackendOrders.slice(0, 5);
   
   // Map backend fields to your UI format
   const orders = limitedOrders.map((order) => ({
@@ -133,12 +133,12 @@ const OngoingOrder = () => {
       </div>
 
       {/* Right Side - Map */}
-      <div className=" border border-gray-200 rounded-xl ">
+      <div className=" border border-gray-200 rounded-xl">
         <MapView 
           orders={filteredOrders} 
           selectedOrderId={selectedOrderId}
           isLoading={isLoading}
-        />
+        /> 
       </div>
     </div>
   );
