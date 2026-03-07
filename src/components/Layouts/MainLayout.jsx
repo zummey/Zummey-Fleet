@@ -69,8 +69,9 @@ const MainLayout = () => {
       label: "Settings",
       hasSubmenu: true,
       submenuItems: [
-        { path: "/settings/profile", label: "Profile" },
-        { path: "/settings/security", label: "Security" },
+        { path: "/settings/accountsettings", label: "Account Settings" },
+        { path: "/settings/security", label: "Security & Privacy" },
+        { path: "/settings/notifications", label: "Notifications & Alerts" }
       ],
     },
     { path: "/help", icon: HelpCircle, label: "Help & Support" },
