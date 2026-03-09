@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import Logo from "../../assets/logo.png";
 import { getNotifications } from "../../api/notifications.service";
+import { useLogout } from "../../api/auth.mutations";
+import { clearAuth } from "../../auth/auth.store";
 
 import {
   ChevronDown,
@@ -12,9 +14,9 @@ import {
   CreditCard,
   Bell,
   Settings,
-  HelpCircle,
   Search,
   ChevronRight,
+  LogOut,
 } from "lucide-react";
 
 const MainLayout = () => {
@@ -74,7 +76,6 @@ const MainLayout = () => {
         { path: "/settings/notifications", label: "Notifications & Alerts" }
       ],
     },
-    { path: "/help", icon: HelpCircle, label: "Help & Support" },
   ];
 
   useEffect(() => {
@@ -104,6 +105,26 @@ const MainLayout = () => {
 
   const toggleSubmenu = (path) => {
     setOpenSubmenu(openSubmenu === path ? null : path);
+  };
+
+  const { mutate: logout, isPending: isLoggingOut } = useLogout();
+
+  const handleLogout = () => {
+    const refresh = localStorage.getItem("refreshToken");
+    logout(
+      { refresh },
+      {
+        onSuccess: () => {
+          clearAuth();
+          navigate("/login");
+        },
+        onError: () => {
+          // Even on API error, clear local tokens and redirect
+          clearAuth();
+          navigate("/login");
+        },
+      }
+    );
   };
 
   return (
@@ -143,9 +164,8 @@ const MainLayout = () => {
           >
             <ChevronRight
               size={18}
-              className={`text-gray-600 transition-transform duration-300 ${
-                sidebarCollapsed ? "rotate-180" : ""
-              }`}
+              className={`text-gray-600 transition-transform duration-300 ${sidebarCollapsed ? "rotate-180" : ""
+                }`}
             />
           </button>
         </div>
@@ -171,10 +191,9 @@ const MainLayout = () => {
                     className={`
                       w-full flex items-center gap-3 px-3.5 py-3 rounded-lg
                       transition-all duration-200 text-sm font-medium
-                      ${
-                        active
-                          ? "bg-[#FFF4E8] text-[#EB4827] cursor-pointer"
-                          : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                      ${active
+                        ? "bg-[#FFF4E8] text-[#EB4827] cursor-pointer"
+                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                       }
                     `}
                   >
@@ -187,9 +206,8 @@ const MainLayout = () => {
                         {item.hasSubmenu && (
                           <ChevronRight
                             size={16}
-                            className={`text-gray-400 flex-shrink-0 transition-transform duration-200 ${
-                              isSubmenuOpen ? "rotate-90" : ""
-                            }`}
+                            className={`text-gray-400 flex-shrink-0 transition-transform duration-200 ${isSubmenuOpen ? "rotate-90" : ""
+                              }`}
                           />
                         )}
                       </>
@@ -209,10 +227,9 @@ const MainLayout = () => {
                               className={`
                                 w-full text-left px-3 py-2 rounded-md text-sm
                                 transition-all duration-200
-                                ${
-                                  subActive
-                                    ? "text-[#EB4827] font-medium cursor-pointer"
-                                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                                ${subActive
+                                  ? "text-[#EB4827] font-medium cursor-pointer"
+                                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                                 }
                               `}
                             >
@@ -250,10 +267,9 @@ const MainLayout = () => {
                     className={`
                       w-full flex items-center gap-3 px-3.5 py-3 rounded-lg relative
                       transition-all duration-200 text-sm font-medium
-                      ${
-                        active
-                          ? "bg-purple-50 text-purple-700"
-                          : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                      ${active
+                        ? "bg-purple-50 text-purple-700"
+                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                       }
                     `}
                   >
@@ -276,9 +292,8 @@ const MainLayout = () => {
                         {item.hasSubmenu && (
                           <ChevronRight
                             size={16}
-                            className={`text-gray-400 flex-shrink-0 transition-transform duration-200 ${
-                              isSubmenuOpen ? "rotate-90" : ""
-                            }`}
+                            className={`text-gray-400 flex-shrink-0 transition-transform duration-200 ${isSubmenuOpen ? "rotate-90" : ""
+                              }`}
                           />
                         )}
                       </>
@@ -298,10 +313,9 @@ const MainLayout = () => {
                               className={`
                                 w-full text-left px-3 py-2 rounded-md text-sm
                                 transition-all duration-200
-                                ${
-                                  subActive
-                                    ? "bg-purple-50 text-purple-700 font-medium"
-                                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                                ${subActive
+                                  ? "bg-purple-50 text-purple-700 font-medium"
+                                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                                 }
                               `}
                             >
@@ -317,6 +331,19 @@ const MainLayout = () => {
             })}
           </ul>
         </nav>
+        {/* Logout Button */}
+        <div className="px-3 py-3 border-t border-gray-100">
+          <button
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+            className="w-full flex items-center gap-3 px-3.5 py-3 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50 hover:text-red-600 transition-all duration-200 disabled:opacity-60"
+          >
+            <LogOut size={20} className="flex-shrink-0" />
+            {!sidebarCollapsed && (
+              <span>{isLoggingOut ? "Logging out..." : "Logout"}</span>
+            )}
+          </button>
+        </div>
       </aside>
 
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -358,7 +385,7 @@ const MainLayout = () => {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-6 bg-gray-50">
+        <main id="main-scroll-container" className="flex-1 overflow-y-auto p-6 bg-gray-50">
           <Outlet />
         </main>
       </div>

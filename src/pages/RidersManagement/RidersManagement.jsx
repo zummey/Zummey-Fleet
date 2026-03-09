@@ -11,6 +11,8 @@ import { useGetRiders, useDeleteRider } from '../../api/authRiders.mutations';
 // Separate component so hooks (useGetRiderById) are called per-row, not inside a map
 const RiderRow = ({ rider, pendingRiders = [], getStatusStyle, onViewDetails, onCompleteRegistration }) => {
   // No API calls needed — uses the non-discardable pendingRiders list
+  const [imgLoaded, setImgLoaded] = React.useState(false);
+  const [imgError, setImgError] = React.useState(false);
 
   const firstName = rider.first_name || rider.firstName || rider.user?.first_name || 'N/A';
   const lastName = rider.last_name || rider.lastName || rider.user?.last_name || '';
@@ -28,25 +30,29 @@ const RiderRow = ({ rider, pendingRiders = [], getStatusStyle, onViewDetails, on
       p.email === (rider?.user_email || rider?.email)
   );
 
+  const hasPhoto = rider.profile_picture_url && !imgError;
+
   return (
     <tr className={`hover:bg-gray-50 shadow-sm rounded-b-lg rounded-t-lg ${isIncomplete ? 'bg-red-50/40' : ''}`}>
-      {/* Avatar */}
+      {/* Avatar — gradient always visible beneath; photo fades in once loaded */}
       <td className="px-2 py-4">
-        {rider.profile_picture_url ? (
-          <img
-            src={rider.profile_picture_url}
-            alt={`${firstName} ${lastName}`}
-            className="w-12 h-12 rounded-full object-cover"
-            onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
-          />
-        ) : null}
-        <div
-          className="w-12 h-12 bg-gradient-to-br from-purple-400 to-blue-500 rounded-full items-center justify-center"
-          style={{ display: rider.profile_picture_url ? 'none' : 'flex' }}
-        >
-          <span className="text-white font-semibold text-lg">
-            {firstName[0]}{lastName[0]}
-          </span>
+        <div className="relative w-12 h-12 flex-shrink-0">
+          {/* Gradient + initials — always rendered, hidden only after photo loads */}
+          <div className={`w-12 h-12 bg-gradient-to-br from-purple-400 to-blue-500 rounded-full flex items-center justify-center absolute inset-0 transition-opacity duration-300 ${hasPhoto && imgLoaded ? 'opacity-0' : 'opacity-100'}`}>
+            <span className="text-white font-semibold text-lg select-none">
+              {(firstName[0] || '').toUpperCase()}{(lastName[0] || '').toUpperCase()}
+            </span>
+          </div>
+          {/* Photo — invisible until loaded, then fades in over the gradient */}
+          {hasPhoto && (
+            <img
+              src={rider.profile_picture_url}
+              alt={`${firstName} ${lastName}`}
+              className={`w-12 h-12 rounded-full object-cover absolute inset-0 transition-opacity duration-300 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
+              onLoad={() => setImgLoaded(true)}
+              onError={() => setImgError(true)}
+            />
+          )}
         </div>
       </td>
 
