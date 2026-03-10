@@ -1,0 +1,18 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# Proxy all /api/* requests to your backend server
+# This replaces the Vite dev-server proxy for production
+[[redirects]]
+  from = "/api/*"
+  to = "http://3.90.12.57:8000/:splat"
+  status = 200
+  force = true
+
+# SPA fallback — send all unmatched routes to index.html
+# so React Router handles /dashboard, /login, etc. correctly
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
