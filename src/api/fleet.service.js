@@ -63,7 +63,7 @@ export const assignVehicleToRider = (data) => {
 };
 
 export const getOngoingOrders = async () => {
-  const response = await api.get('/bookings/v1/bookings/requests/');
+  const response = await api.get('/fleet/riders/booking/requests/');
   return response.data;
 };
 

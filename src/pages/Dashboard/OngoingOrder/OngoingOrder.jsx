@@ -13,16 +13,18 @@ const OngoingOrder = () => {
   const { data, isLoading, isError, error } = useOngoingOrders();
 
   // Extract and map backend data to your format (do this before early returns)
+  // API returns camelCase responseDetails
   const backendOrders = data?.responseDetails?.results || [];
-  
-  // Filter out delivered orders (only show ongoing ones)
-  const ongoingBackendOrders = backendOrders.filter(order => 
-    order.progress !== 'PACKAGE_DELIVERED'
+
+  // Ongoing = not PENDING (not yet accepted) and not PACKAGE_DELIVERED (already done)
+  const ongoingBackendOrders = backendOrders.filter(order =>
+    order.progress !== 'PACKAGE_DELIVERED' &&
+    order.progress !== 'PENDING'
   );
 
   // Limit to 3 orders for dashboard view
   const limitedOrders = ongoingBackendOrders.slice(0, 5);
-  
+
   // Map backend fields to your UI format
   const orders = limitedOrders.map((order) => ({
     id: order.delivery_id,
@@ -34,20 +36,23 @@ const OngoingOrder = () => {
       hour: '2-digit',
       minute: '2-digit'
     }),
+    riderName: order.rider_name || 'Unknown Rider',
+    customerName: order.customer_name || 'Unknown Customer',
     pickupLocation: {
       name: order.sender_address?.split(',')[0] || 'Pickup Location',
       address: order.sender_address || 'Address not available',
-      lat: order.pickup_latitude,
-      lng: order.pickup_longitude,
+      lat: parseFloat(order.pickup_latitude),
+      lng: parseFloat(order.pickup_longitude),
     },
     destination: {
       name: order.receiver_address?.split(',')[0] || 'Destination',
       address: order.receiver_address || 'Address not available',
-      lat: order.dropoff_latitude,
-      lng: order.dropoff_longitude,
+      lat: parseFloat(order.dropoff_latitude),
+      lng: parseFloat(order.dropoff_longitude),
     },
     status: order.status,
     progress: order.progress,
+    progressArray: order.progress_array || [],
     amount: order.amount,
     mapPreview: null,
   }));
@@ -88,57 +93,64 @@ const OngoingOrder = () => {
   console.log('✅ Showing (limited to 3):', orders.length);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 ">
-      {/* Left Side - Order List */}
-      <div className="flex flex-col bg-white p-4">
-        {/* Header with Search */}
-        <div className="mb-4 flex justify-between items-center">
-          <h3 className="text-[1.1rem] font-medium text-gray-900 ">
-            Ongoing Order
-          </h3>
+    // sticky: once this section scrolls to the top it locks in place.
+    // The height is capped so the two panels never overflow the viewport.
+    <div className="sticky top-0 z-10 bg-gray-50 pt-1">
+      <div
+        className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+        style={{ height: 'calc(100vh - 88px)' }}  // 88px = header height
+      >
+        {/* Left Side — header stays fixed, order cards scroll */}
+        <div className="flex flex-col bg-white p-4 rounded-xl overflow-hidden">
+          {/* Header with Search — sticks to top of left panel */}
+          <div className="mb-4 flex justify-between items-center flex-shrink-0">
+            <h3 className="text-[1.1rem] font-medium text-gray-900">
+              Ongoing Order
+            </h3>
 
-          {/* Search Bar */}
-          <div className="relative w-[45%]">
-            <Search
-              size={15}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-            />
-            <input
-              type="text"
-              placeholder="Search by Order ID"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-[2rem] text-[.7rem] focus:outline-none focus:ring-2 focus:ring-[#FFF4E8] focus:bg-white transition-all"
-            />
+            {/* Search Bar */}
+            <div className="relative w-[45%]">
+              <Search
+                size={15}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              />
+              <input
+                type="text"
+                placeholder="Search by Order ID"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-[2rem] text-[.7rem] focus:outline-none focus:ring-2 focus:ring-[#FFF4E8] focus:bg-white transition-all"
+              />
+            </div>
+          </div>
+
+          {/* Order Cards — scrollable, takes remaining height */}
+          <div className="flex-1 overflow-y-auto space-y-3 pr-2">
+            {filteredOrders.length === 0 ? (
+              <div className="flex items-center justify-center h-full">
+                <p className="text-gray-500">No ongoing orders found</p>
+              </div>
+            ) : (
+              filteredOrders.map((order) => (
+                <OrderCard
+                  key={order.id}
+                  order={order}
+                  isSelected={selectedOrderId === order.id}
+                  onViewDetails={() => setSelectedOrderId(order.id)}
+                />
+              ))
+            )}
           </div>
         </div>
 
-        {/* Order Cards - Scrollable */}
-        <div className="flex-1 overflow-y-auto space-y-3 pr-2">
-          {filteredOrders.length === 0 ? (
-            <div className="flex items-center justify-center h-full">
-              <p className="text-gray-500">No ongoing orders found</p>
-            </div>
-          ) : (
-            filteredOrders.map((order) => (
-              <OrderCard 
-                key={order.id} 
-                order={order}
-                isSelected={selectedOrderId === order.id}
-                onViewDetails={() => setSelectedOrderId(order.id)}
-              />
-            ))
-          )}
+        {/* Right Side — Map fills full height and stays visible */}
+        <div className="border border-gray-200 rounded-xl overflow-hidden">
+          <MapView
+            orders={filteredOrders}
+            selectedOrderId={selectedOrderId}
+            isLoading={isLoading}
+          />
         </div>
-      </div>
-
-      {/* Right Side - Map */}
-      <div className=" border border-gray-200 rounded-xl">
-        <MapView 
-          orders={filteredOrders} 
-          selectedOrderId={selectedOrderId}
-          isLoading={isLoading}
-        /> 
       </div>
     </div>
   );

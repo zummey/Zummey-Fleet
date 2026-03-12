@@ -91,11 +91,23 @@ const Login = () => {
               placeholder="Input Password"
             />
           </div>
-          {isError && (
-            <p className="text-red-500">
-              {error?.response?.data?.responseMessage}
-            </p>
-          )}
+          {isError && (() => {
+            const raw = error?.response?.data?.responseMessage?.toLowerCase() || "";
+            const msg =
+              raw.includes("password") || raw.includes("credential") || raw.includes("invalid") || raw.includes("authentication")
+                ? "Incorrect email address or password. Please try again."
+                : raw.includes("not found") || raw.includes("no account") || raw.includes("user")
+                  ? "No account found with that email address."
+                  : raw.includes("inactive") || raw.includes("disabled")
+                    ? "Your account has been deactivated. Please contact support."
+                    : "Something went wrong. Please try again.";
+            return (
+              <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2.5 mb-2">
+                <span className="text-red-500 mt-0.5">⚠</span>
+                <p className="text-red-600 text-sm">{msg}</p>
+              </div>
+            );
+          })()}
           <div className="terms mt-4 mb-4 flex">
             <input type="checkbox" name="terms" id="terms" className="" />
             <label
@@ -103,9 +115,9 @@ const Login = () => {
               className="ml-2 flex justify-between w-[100%]"
             >
               <span className="text-primary cursor-pointer">Remember me</span>
-              <span className="text-secondary cursor-pointer">
+              <Link to="/reset_password" className="text-secondary cursor-pointer hover:underline">
                 Reset Password?
-              </span>
+              </Link>
             </label>
           </div>
 

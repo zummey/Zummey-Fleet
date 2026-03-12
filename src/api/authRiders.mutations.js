@@ -11,7 +11,7 @@ import {
   fetchRiderById,
   updateRider,
   deleteRider,
-} from './authRIders';
+} from './authRiders';
 
 /**
  * REGISTER RIDER MUTATION

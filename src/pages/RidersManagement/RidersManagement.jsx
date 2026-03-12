@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertCircle, Filter, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { AlertCircle, Filter, ChevronDown, ChevronLeft, ChevronRight, X, Search } from 'lucide-react';
 import Car from '../../assets/car-01.png';
 import RiderDetailsModal from './modals/RiderDetailsModal';
 import DeleteRiderModal from './modals/DeleteRiderModal';
@@ -11,6 +11,8 @@ import { useGetRiders, useDeleteRider } from '../../api/authRiders.mutations';
 // Separate component so hooks (useGetRiderById) are called per-row, not inside a map
 const RiderRow = ({ rider, pendingRiders = [], getStatusStyle, onViewDetails, onCompleteRegistration }) => {
   // No API calls needed — uses the non-discardable pendingRiders list
+  const [imgLoaded, setImgLoaded] = React.useState(false);
+  const [imgError, setImgError] = React.useState(false);
 
   const firstName = rider.first_name || rider.firstName || rider.user?.first_name || 'N/A';
   const lastName = rider.last_name || rider.lastName || rider.user?.last_name || '';
@@ -28,25 +30,29 @@ const RiderRow = ({ rider, pendingRiders = [], getStatusStyle, onViewDetails, on
       p.email === (rider?.user_email || rider?.email)
   );
 
+  const hasPhoto = rider.profile_picture_url && !imgError;
+
   return (
     <tr className={`hover:bg-gray-50 shadow-sm rounded-b-lg rounded-t-lg ${isIncomplete ? 'bg-red-50/40' : ''}`}>
-      {/* Avatar */}
+      {/* Avatar — gradient always visible beneath; photo fades in once loaded */}
       <td className="px-2 py-4">
-        {rider.profile_picture_url ? (
-          <img
-            src={rider.profile_picture_url}
-            alt={`${firstName} ${lastName}`}
-            className="w-12 h-12 rounded-full object-cover"
-            onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
-          />
-        ) : null}
-        <div
-          className="w-12 h-12 bg-gradient-to-br from-purple-400 to-blue-500 rounded-full items-center justify-center"
-          style={{ display: rider.profile_picture_url ? 'none' : 'flex' }}
-        >
-          <span className="text-white font-semibold text-lg">
-            {firstName[0]}{lastName[0]}
-          </span>
+        <div className="relative w-12 h-12 flex-shrink-0">
+          {/* Gradient + initials — always rendered, hidden only after photo loads */}
+          <div className={`w-12 h-12 bg-gradient-to-br from-purple-400 to-blue-500 rounded-full flex items-center justify-center absolute inset-0 transition-opacity duration-300 ${hasPhoto && imgLoaded ? 'opacity-0' : 'opacity-100'}`}>
+            <span className="text-white font-semibold text-lg select-none">
+              {(firstName[0] || '').toUpperCase()}{(lastName[0] || '').toUpperCase()}
+            </span>
+          </div>
+          {/* Photo — invisible until loaded, then fades in over the gradient */}
+          {hasPhoto && (
+            <img
+              src={rider.profile_picture_url}
+              alt={`${firstName} ${lastName}`}
+              className={`w-12 h-12 rounded-full object-cover absolute inset-0 transition-opacity duration-300 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
+              onLoad={() => setImgLoaded(true)}
+              onError={() => setImgError(true)}
+            />
+          )}
         </div>
       </td>
 
@@ -123,6 +129,15 @@ const RidersManagement = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const PAGE_SIZE = 5;
 
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [filters, setFilters] = useState({
+    startDate: '',
+    endDate: '',
+    status: [],    // 'Online' | 'Offline'
+    name: '',
+    riderId: '',
+  });
+
   // Fetch riders from API — React Query auto-refreshes when cache is invalidated
   const { data: ridersData, isLoading: ridersLoading } = useGetRiders();
   // API response: { responseDetails: { count, results: [...] } }
@@ -134,13 +149,66 @@ const RidersManagement = () => {
         ? ridersData
         : [];
 
+  // Apply filters to full riders list
+  const filteredRiders = riders.filter((rider) => {
+    const firstName = rider.first_name || rider.firstName || rider.user?.first_name || '';
+    const lastName = rider.last_name || rider.lastName || rider.user?.last_name || '';
+    const fullName = `${firstName} ${lastName}`.toLowerCase();
+    const riderId = String(rider.id || rider.profile_id || rider.user_id || '');
+    const isOnline = rider.is_online;
+    const status = isOnline === true ? 'Online' : 'Offline';
+
+    if (filters.name && !fullName.includes(filters.name.toLowerCase())) return false;
+    if (filters.riderId && !riderId.includes(filters.riderId)) return false;
+    if (filters.status.length > 0 && !filters.status.includes(status)) return false;
+    if (filters.startDate) {
+      const joined = new Date(rider.created_at || rider.date_joined);
+      if (!isNaN(joined) && joined < new Date(filters.startDate)) return false;
+    }
+    if (filters.endDate) {
+      const joined = new Date(rider.created_at || rider.date_joined);
+      const end = new Date(filters.endDate);
+      end.setHours(23, 59, 59);
+      if (!isNaN(joined) && joined > end) return false;
+    }
+    return true;
+  });
+
   // Reset to page 1 whenever the riders list changes length
   useEffect(() => {
     setCurrentPage(1);
-  }, [riders.length]);
+  }, [filteredRiders.length]);
 
-  const totalPages = Math.max(1, Math.ceil(riders.length / PAGE_SIZE));
-  const paginatedRiders = riders.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(filteredRiders.length / PAGE_SIZE));
+  const paginatedRiders = filteredRiders.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  const handleFilterChange = (key, value) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+    setCurrentPage(1);
+  };
+
+  const handleStatusToggle = (status) => {
+    setFilters((prev) => ({
+      ...prev,
+      status: prev.status.includes(status)
+        ? prev.status.filter((s) => s !== status)
+        : [...prev.status, status],
+    }));
+    setCurrentPage(1);
+  };
+
+  const clearFilters = () => {
+    setFilters({ startDate: '', endDate: '', status: [], name: '', riderId: '' });
+    setCurrentPage(1);
+  };
+
+  const activeFilterCount = [
+    filters.startDate,
+    filters.endDate,
+    filters.name,
+    filters.riderId,
+    ...filters.status,
+  ].filter(Boolean).length;
 
   // On mount: load banner data + build the non-discardable pendingRiders list
   useEffect(() => {
@@ -362,13 +430,17 @@ const RidersManagement = () => {
 
         {riders.length > 0 ? (
           <div className="flex items-center gap-3">
-            <button className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-              <span className="text-sm">Sort By</span>
-              <ChevronDown size={16} />
-            </button>
-            <button className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+            <button
+              onClick={() => setIsFilterOpen(true)}
+              className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors relative"
+            >
               <Filter size={16} />
               <span className="text-sm">Filter</span>
+              {activeFilterCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-[#1E2A5E] text-white text-xs font-semibold rounded-full w-5 h-5 flex items-center justify-center">
+                  {activeFilterCount}
+                </span>
+              )}
             </button>
             <button
               onClick={handleAddRider}
@@ -494,6 +566,124 @@ const RidersManagement = () => {
         isOpen={showDeleteSuccess}
         onClose={() => setShowDeleteSuccess(false)}
       />
+
+      {/* Filter Sidebar */}
+      {isFilterOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-[#B3B3BF]/40 z-50 h-full"
+            onClick={() => setIsFilterOpen(false)}
+          />
+
+          {/* Panel */}
+          <div className="fixed right-0 top-0 h-full w-96 bg-white shadow-xl z-50 overflow-y-auto font-poppins">
+            <div className="p-6 space-y-6">
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">Filter Options</h3>
+                <button
+                  onClick={() => setIsFilterOpen(false)}
+                  className="p-1 hover:bg-gray-100 rounded-lg"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Date Range */}
+              <div>
+                <h4 className="text-sm font-medium text-gray-900 mb-3">Date Joined</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-gray-600 mb-1 block">From</label>
+                    <input
+                      type="date"
+                      value={filters.startDate}
+                      onChange={(e) => handleFilterChange('startDate', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1E2A5E]"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-600 mb-1 block">To</label>
+                    <input
+                      type="date"
+                      value={filters.endDate}
+                      onChange={(e) => handleFilterChange('endDate', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1E2A5E]"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Status */}
+              <div>
+                <h4 className="text-sm font-medium text-gray-900 mb-3">Rider Status</h4>
+                <div className="space-y-2">
+                  {['Online', 'Offline'].map((s) => (
+                    <label key={s} className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={filters.status.includes(s)}
+                        onChange={() => handleStatusToggle(s)}
+                        className="w-4 h-4 rounded border-gray-300 text-[#EB4827] focus:ring-[#EB4827]"
+                      />
+                      <span className="text-sm text-gray-700">{s}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Search by Name */}
+              <div>
+                <h4 className="text-sm font-medium text-gray-900 mb-3">Search by Name</h4>
+                <div className="relative">
+                  <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Rider's full name"
+                    value={filters.name}
+                    onChange={(e) => handleFilterChange('name', e.target.value)}
+                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-[2em] text-sm focus:outline-none focus:ring-2 focus:ring-[#1E2A5E]"
+                  />
+                </div>
+              </div>
+
+              {/* Search by ID */}
+              <div>
+                <h4 className="text-sm font-medium text-gray-900 mb-3">Search by Rider ID</h4>
+                <div className="relative">
+                  <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="e.g. 42"
+                    value={filters.riderId}
+                    onChange={(e) => handleFilterChange('riderId', e.target.value)}
+                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-[2em] text-sm focus:outline-none focus:ring-2 focus:ring-[#1E2A5E]"
+                  />
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-3">
+                {activeFilterCount > 0 && (
+                  <button
+                    onClick={clearFilters}
+                    className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors text-sm"
+                  >
+                    Clear All
+                  </button>
+                )}
+                <button
+                  onClick={() => setIsFilterOpen(false)}
+                  className="flex-1 bg-[#1E2A5E] text-white py-3 rounded-lg font-medium hover:bg-[#162042] transition-colors text-sm"
+                >
+                  Apply Filter
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };

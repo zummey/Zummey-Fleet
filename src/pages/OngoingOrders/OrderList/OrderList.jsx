@@ -12,6 +12,7 @@ import { useOngoingOrders } from "../../../api/dashboard.queries";
 import Vehicle from "../../../assets/vehicle.png";
 import FullScreenMapModal from "./FullScreenMapModal";
 import OrderListSkeleton from "./OrderListSkelecton";
+import RiderDetailsModal from "../../RidersManagement/modals/RiderDetailsModal";
 
 const ITEMS_PER_PAGE = 5;
 
@@ -19,9 +20,11 @@ const OrderList = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [openDropdownId, setOpenDropdownId] = useState(null);
-  
+
   // Track Live Modal State
   const [trackingOrder, setTrackingOrder] = useState(null);
+  const [selectedRider, setSelectedRider] = useState(null); // { id: rider_profile_id }
+  const [showRiderModal, setShowRiderModal] = useState(false);
 
   // Filter states
   const [filters, setFilters] = useState({
@@ -36,7 +39,7 @@ const OrderList = () => {
   // Fetch orders
   const { data, isLoading, isError, error } = useOngoingOrders();
 
-  // Extract orders from response
+  // API returns camelCase responseDetails
   const allOrders = data?.responseDetails?.results || [];
 
   // Apply filters
@@ -55,6 +58,11 @@ const OrderList = () => {
 
     if (filters.status.length > 0) {
       if (!filters.status.includes(order.status)) return false;
+    }
+
+    if (filters.driverName) {
+      const name = (order.rider_name || `Rider ${order.rider_profile_id || ''}`).toLowerCase();
+      if (!name.includes(filters.driverName.toLowerCase())) return false;
     }
 
     if (filters.orderId) {
@@ -252,7 +260,7 @@ const OrderList = () => {
                         {order.request_id}
                       </td>
                       <td className="px-2 py-4 font-medium text-[0.75rem] text-gray-600">
-                        Rider {order.rider_profile_id || "N/A"}
+                        {order.rider_name || `Rider ${order.rider_profile_id || 'N/A'}`}
                       </td>
                       <td className="px-2 py-4 font-medium text-[0.75rem] text-gray-600">
                         {order.sender_address || "N/A"}
@@ -305,7 +313,8 @@ const OrderList = () => {
                               </button>
                               <button
                                 onClick={() => {
-                                  console.log("View Rider Profile:", order.request_id);
+                                  setSelectedRider({ id: order.rider_profile_id });
+                                  setShowRiderModal(true);
                                   setOpenDropdownId(null);
                                 }}
                                 className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors border-t border-gray-100"
@@ -519,6 +528,17 @@ const OrderList = () => {
           onClose={() => setTrackingOrder(null)}
         />
       )}
+
+      {/* Rider Profile Modal */}
+      <RiderDetailsModal
+        isOpen={showRiderModal}
+        onClose={() => {
+          setShowRiderModal(false);
+          setSelectedRider(null);
+        }}
+        rider={selectedRider}
+        onDelete={null} // read-only from OrderList — no delete action needed
+      />
     </>
   );
 };

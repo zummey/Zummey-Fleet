@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { useChangePassword } from '../../api/auth.mutations';
 import SuccessModal from '../../components/Modal/SuccessModal';
 
 const Security = () => {
@@ -16,7 +15,7 @@ const Security = () => {
     }
   }, []);
 
-  const mutation = useChangePassword();
+ 
 
   const onSubmit = (data) => {
     const user = JSON.parse(localStorage.getItem('user'));
@@ -79,9 +78,9 @@ const Security = () => {
             <button
               type="submit"
               className="bg-[#001940] text-white px-4 py-2 rounded"
-              disabled={mutation.isLoading}
+              // disabled={mutation.isLoading}
             >
-              {mutation.isLoading ? 'Changing...' : 'Change Password'}
+              {/* {mutation.isLoading ? 'Changing...' : 'Change Password'} */}
             </button>
           </div>
         </form>
