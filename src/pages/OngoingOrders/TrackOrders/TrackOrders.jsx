@@ -12,12 +12,14 @@ const TrackOrders = () => {
   // Fetch ongoing orders from backend
   const { data, isLoading, isError, error } = useOngoingOrders();
 
-  // Extract and map backend data to your format
+  // API returns camelCase responseDetails
   const backendOrders = data?.responseDetails?.results || [];
 
-  // Filter out delivered orders (only show ongoing ones)
+  // Ongoing = not PENDING (not yet accepted) and not PACKAGE_DELIVERED (already done)
   const ongoingBackendOrders = backendOrders.filter(
-    (order) => order.progress !== "PACKAGE_DELIVERED",
+    (order) =>
+      order.progress !== 'PACKAGE_DELIVERED' &&
+      order.progress !== 'PENDING'
   );
 
   // NO LIMIT - Show all ongoing orders

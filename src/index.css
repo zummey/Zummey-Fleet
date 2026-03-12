@@ -20,19 +20,22 @@ html *::after {
 
 @layer utilities {
   .no-scrollbar {
-    -ms-overflow-style: none; /* IE & Edge */
-    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;
+    /* IE & Edge */
+    scrollbar-width: none;
+    /* Firefox */
   }
 
   .no-scrollbar::-webkit-scrollbar {
-    display: none; /* Chrome, Safari */
+    display: none;
+    /* Chrome, Safari */
   }
 }
 
-.form-inner{
+.form-inner {
   @apply flex flex-col gap-2 mb-3
 }
 
-.signin-input{
+.signin-input {
   @apply bg-[#F7F7F8] py-2 rounded-lg pl-4 placeholder-[#979797] placeholder:text-sm
 }

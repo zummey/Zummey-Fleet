@@ -31,7 +31,7 @@ const SignUp = () => {
     isSuccess: isRegisterSuccess,
   } = useRegister();
 
-  
+
 
   const [serverError, setServerError] = useState("");
   const [registeredEmail, setRegisteredEmail] = useState("");
@@ -66,9 +66,9 @@ const SignUp = () => {
   return (
     <div className="signup-container flex justify-center items-center">
       {/*  */}
-      {isRegisterSuccess && registeredEmail &&  (
+      {isRegisterSuccess && registeredEmail && (
         <EmailVerificationModal
-          email={registeredEmail}    
+          email={registeredEmail}
         />
       )}
 
@@ -218,7 +218,7 @@ const SignUp = () => {
             Sign Up
           </button> */}
         </form>
-          
+
         <Link to="/login">
           <p className="text-center">
             Already have an account?{" "}

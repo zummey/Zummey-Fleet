@@ -13,11 +13,13 @@ const OngoingOrder = () => {
   const { data, isLoading, isError, error } = useOngoingOrders();
 
   // Extract and map backend data to your format (do this before early returns)
+  // API returns camelCase responseDetails
   const backendOrders = data?.responseDetails?.results || [];
 
-  // Filter out delivered orders (only show ongoing ones)
+  // Ongoing = not PENDING (not yet accepted) and not PACKAGE_DELIVERED (already done)
   const ongoingBackendOrders = backendOrders.filter(order =>
-    order.progress !== 'PACKAGE_DELIVERED'
+    order.progress !== 'PACKAGE_DELIVERED' &&
+    order.progress !== 'PENDING'
   );
 
   // Limit to 3 orders for dashboard view
@@ -34,20 +36,23 @@ const OngoingOrder = () => {
       hour: '2-digit',
       minute: '2-digit'
     }),
+    riderName: order.rider_name || 'Unknown Rider',
+    customerName: order.customer_name || 'Unknown Customer',
     pickupLocation: {
       name: order.sender_address?.split(',')[0] || 'Pickup Location',
       address: order.sender_address || 'Address not available',
-      lat: order.pickup_latitude,
-      lng: order.pickup_longitude,
+      lat: parseFloat(order.pickup_latitude),
+      lng: parseFloat(order.pickup_longitude),
     },
     destination: {
       name: order.receiver_address?.split(',')[0] || 'Destination',
       address: order.receiver_address || 'Address not available',
-      lat: order.dropoff_latitude,
-      lng: order.dropoff_longitude,
+      lat: parseFloat(order.dropoff_latitude),
+      lng: parseFloat(order.dropoff_longitude),
     },
     status: order.status,
     progress: order.progress,
+    progressArray: order.progress_array || [],
     amount: order.amount,
     mapPreview: null,
   }));
