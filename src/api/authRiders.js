@@ -48,12 +48,15 @@ export const getRiderStageProgress = (riderId) => {
  * Returns presigned S3 URL and asset_id for uploading files
  */
 export const getPresignedUrl = ({ filename, filesize, use_case, rider_id }) => {
-    return api.post('/common/v1/files/uploads/', {
+    const payload = {
         filename,
         filesize,
         use_case,
-        rider_id
-    });
+    };
+    if (rider_id) {
+        payload.rider_id = rider_id;
+    }
+    return api.post('/common/v1/files/uploads/', payload);
 };
 
 /**

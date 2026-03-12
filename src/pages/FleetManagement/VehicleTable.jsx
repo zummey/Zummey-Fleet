@@ -10,18 +10,18 @@ const VehicleTable = ({ vehicles = [], loading, onAssign, onEdit, onDelete }) =>
   return (
     <div className="rounded-lg overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="min-w-max w-full text-sm border-separate [border-spacing:0_10px]">
+        <table className="min-w-max w-full text-md border-separate [border-spacing:0_10px]">
         <thead className="bg-gray-50">
           <tr className="text-left">
             <th className="w-12" />
-            <th className="p-4">Bike ID</th>
-            <th className="p-4">Bike Type</th>
-            <th className="p-4">Bike Name</th>
-            <th className="p-4">Manufacturer</th>
-            <th className="p-4">License No.</th>
-            <th className="p-4">GPS Tracker SN</th>
-            <th className="p-4">Status</th>
-            <th className="p-4">Assigned Rider</th>
+            <th className="p-4 font-normal">Bike ID</th>
+            <th className="p-4 font-normal">Bike Type</th>
+            <th className="p-4 font-normal">Bike Name</th>
+            <th className="p-4 font-normal">Manufacturer</th>
+            <th className="p-4 font-normal">License No.</th>
+            <th className="p-4 font-normal">GPS Tracker SN</th>
+            <th className="p-4 font-normal">Status</th>
+            <th className="p-4 font-normal">Assigned Rider</th>
             <th className="w-12" />
           </tr>
         </thead>

@@ -53,7 +53,7 @@ const VehicleRow = ({ vehicle, onAssign, onEdit, onDelete }) => {
     }
     return String(a);
   };
-  const assigned = formatAssigned(rawAssigned);
+  const assigned = vehicle.assignedText || formatAssigned(rawAssigned);
 
   const rawStatus = (vehicle.status || vehicle.state || vehicle.online_status || (vehicle.active ? "online" : "offline") || "").toString();
   const key = rawStatus.toLowerCase();

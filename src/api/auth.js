@@ -25,3 +25,8 @@ export const refreshToken = (refresh) => {
   return api.post("/users/v1/refresh-token/", {refresh});
 }
 
+// Change Password
+export const changePassword = (data) => {
+  return api.put("/fleet/riders/reset/password/", data);
+}
+

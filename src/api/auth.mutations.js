@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { registerUser, verifyEmailOtp, resendEmailOtp, loginUser } from "./auth";
+import { registerUser, verifyEmailOtp, resendEmailOtp, loginUser, changePassword } from "./auth";
 
 
 //SIGN UP MUTATION
@@ -26,5 +26,8 @@ export const useLogin = () =>
     mutationFn: loginUser,
   });
 
-
-  
+// Change Password Mutation
+export const useChangePassword = () => 
+  useMutation({
+    mutationFn: changePassword,
+  });

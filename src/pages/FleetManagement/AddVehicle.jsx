@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { createVehicle } from "../../api/fleet.service";
+import { createVehicle, updateVehicle } from "../../api/fleet.service";
 import { ArrowLeft, Camera, ImagePlus } from "lucide-react";
+import { useGetVehiclePresignedUrl, useUploadVehicleToS3 } from "../../api/fleet.mutations";
 
 const AddVehicle = ({ onClose, onSuccess }) => {
   const [isClosing, setIsClosing] = useState(false);
@@ -19,6 +20,66 @@ const AddVehicle = ({ onClose, onSuccess }) => {
   const [mainImagePreview, setMainImagePreview] = useState(null);
   const [additionalImages, setAdditionalImages] = useState([]);
   const [additionalImagePreviews, setAdditionalImagePreviews] = useState([]);
+
+  // State for asset IDs from S3 uploads
+  const [assetIds, setAssetIds] = useState({
+    main_image: null,
+    additional_images: [],
+  });
+
+  const { mutateAsync: getPresignedUrlAsync } = useGetVehiclePresignedUrl();
+  const { mutateAsync: uploadToS3Async } = useUploadVehicleToS3();
+
+  const user = JSON.parse(localStorage.getItem("user"));
+
+  /**
+   * Upload a single file to S3
+   * 1. Get presigned URL from backend
+   * 2. Upload file to S3 using presigned URL
+   * 3. Return asset_id
+   */
+  // file: the File object, useCase: descriptive label, vehicleId: optional id to send to backend
+  const uploadFileToS3 = async (file, useCase, vehicleId = null) => {
+    try {
+      console.log(`📤 Uploading ${useCase}:`, file.name, `(${file.size} bytes)`);
+
+      // Step 1: Get presigned URL via React Query mutation
+      const payload = {
+        filename: file.name,
+        filesize: file.size,
+        use_case: 'VEHICLE_PIC',
+      };
+      if (vehicleId !== null && vehicleId !== undefined) {
+        payload.vehicle_id = vehicleId;
+      }
+
+      const presignedResponse = await getPresignedUrlAsync(payload);
+
+      // Log full response for debugging
+      console.log(`📦 Presigned URL response for ${useCase}:`, presignedResponse.data);
+
+      // Backend returns: responseDetails.asset_id + responseDetails.presigned_url
+      const responseDetail = presignedResponse.data?.responseDetails;
+      const assetId = responseDetail?.asset_id;
+      const presignedUrl = responseDetail?.presigned_url;
+
+      if (!assetId || !presignedUrl) {
+        console.error('❌ Invalid presigned URL response:', presignedResponse.data);
+        throw new Error(`Missing assetId or presignedUrl for ${useCase}`);
+      }
+
+      console.log(`✅ Got presigned URL for ${useCase}, assetId: ${assetId}`);
+
+      // Step 2: Upload file bytes to S3 via React Query mutation
+      await uploadToS3Async({ presignedUrl, file });
+      console.log(`✅ S3 upload done for ${useCase}`);
+
+      return assetId;
+    } catch (error) {
+      console.error(`❌ Upload failed for ${useCase}:`, error);
+      throw error;
+    }
+  };
 
   const manufacturers = [
     "Honda",
@@ -68,60 +129,65 @@ const AddVehicle = ({ onClose, onSuccess }) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      // Create an optimistic vehicle object so the UI can show preview immediately
-      const tempId = `temp-${Date.now()}`;
-      const tempVehicle = {
-        id: tempId,
+      // first create vehicle without images to obtain an id
+      const createPayload = {
         vehicle_name: formData.vehicle_name,
         vehicle_make: formData.vehicle_make,
         vehicle_licence_serial: formData.vehicle_licence_serial,
         gps_tracker_serial: formData.gps_tracker_serial,
-        vehicle_type: formData.vehicle_type,
-        vehicle_color: formData.vehicle_color,
-        // provide preview image (data URL) for immediate display
-        _localImage: mainImagePreview || null,
+        vehicle_type: formData.vehicle_type || "MOTORCYCLE",
+        vehicle_color: formData.vehicle_color || "",
       };
 
-      // notify parent to optimistically add this vehicle
+      const createResp = await createVehicle(createPayload);
+      const createdVehicle = createResp.data;
+      const vehicleId = createdVehicle?.id;
+
+      // optimistic entry (now with real id so updates can target it)
+      const tempVehicle = {
+        id: vehicleId || `temp-${Date.now()}`,
+        ...createPayload,
+        _localImage: mainImagePreview || null,
+      };
       onSuccess && onSuccess(tempVehicle);
 
-      // If no files/images are provided, send JSON matching backend fields.
-      const hasMainImage = !!formData.main_image;
-      const hasAdditionalImages = additionalImages.some(Boolean);
+      // Upload images to S3 now that we have a vehicleId
+      const uploadedAssetIds = { main_image: null, additional_images: [] };
 
-      if (!hasMainImage && !hasAdditionalImages) {
-        const payload = {
-          vehicle_name: formData.vehicle_name,
-          vehicle_make: formData.vehicle_make,
-          vehicle_licence_serial: formData.vehicle_licence_serial,
-          gps_tracker_serial: formData.gps_tracker_serial,
-          vehicle_type: formData.vehicle_type || "MOTORCYCLE",
-          vehicle_color: formData.vehicle_color || "",
-        };
-
-        await createVehicle(payload);
-      } else {
-        // If there are images, send as FormData but use backend field names.
-        const fData = new FormData();
-        fData.append("vehicle_name", formData.vehicle_name);
-        fData.append("vehicle_make", formData.vehicle_make);
-        fData.append("vehicle_licence_serial", formData.vehicle_licence_serial);
-        fData.append("gps_tracker_serial", formData.gps_tracker_serial);
-        fData.append("vehicle_type", formData.vehicle_type || "MOTORCYCLE");
-        fData.append("vehicle_color", formData.vehicle_color || "");
-
-        if (formData.main_image) {
-          fData.append("main_image", formData.main_image);
-        }
-
-        additionalImages.forEach((img, idx) => {
-          if (img) {
-            fData.append(`additional_image_${idx}`, img);
-          }
-        });
-
-        await createVehicle(fData);
+      if (formData.main_image) {
+        uploadedAssetIds.main_image = await uploadFileToS3(
+          formData.main_image,
+          'vehicle_main_image',
+          vehicleId
+        );
       }
+
+      for (let i = 0; i < additionalImages.length; i++) {
+        if (additionalImages[i]) {
+          const assetId = await uploadFileToS3(
+            additionalImages[i],
+            'vehicle_additional_image',
+            vehicleId
+          );
+          uploadedAssetIds.additional_images.push(assetId);
+        }
+      }
+
+      // Update assetIds state
+      setAssetIds(uploadedAssetIds);
+
+      // patch vehicle with returned asset ids if any
+      const updatePayload = {};
+      if (uploadedAssetIds.main_image) {
+        updatePayload.main_image_asset_id = uploadedAssetIds.main_image;
+      }
+      if (uploadedAssetIds.additional_images.length) {
+        updatePayload.additional_image_asset_ids = uploadedAssetIds.additional_images;
+      }
+      if (vehicleId && Object.keys(updatePayload).length) {
+        await updateVehicle(vehicleId, updatePayload);
+      }
+
       // On success, request parent to refresh full list (server canonical)
       setSubmitSuccess(true);
       setTimeout(() => {

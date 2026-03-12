@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import VehicleTable from "./VehicleTable";
 import AddVehicle from "./AddVehicle";
-import { deleteVehicle, getVehicles, updateVehicle } from "../../api/fleet.service";
+import { assignVehicleToRider, deleteVehicle, getVehicles, updateVehicle } from "../../api/fleet.service";
+import { fetchRiders } from "../../api/authRiders";
 import { FunnelIcon, Trash2 } from "lucide-react";
 
 const FleetManagement = () => {
-  const PAGE_SIZE = 10;
+  const PAGE_SIZE = 6;
   const [vehicles, setVehicles] = useState([]);
   const [showAddVehicle, setShowAddVehicle] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -23,6 +24,12 @@ const FleetManagement = () => {
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
+  const [assignVehicle, setAssignVehicle] = useState(null);
+  const [riders, setRiders] = useState([]);
+  const [ridersLoading, setRidersLoading] = useState(false);
+  const [assignRiderId, setAssignRiderId] = useState("");
+  const [assignLoading, setAssignLoading] = useState(false);
+  const [assignError, setAssignError] = useState(null);
 
   const fetchVehicles = async () => {
     try {
@@ -49,6 +56,20 @@ const FleetManagement = () => {
     fetchVehicles();
   }, []);
 
+  const fetchRidersData = async () => {
+    try {
+      const res = await fetchRiders();
+      setRiders(getRidersList(res));
+    } catch (err) {
+      console.error("Failed to fetch riders", err);
+      setRiders([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchRidersData();
+  }, []);
+
   const getStatusKey = (vehicle) => {
     const raw = (
       vehicle.status ||
@@ -65,6 +86,32 @@ const FleetManagement = () => {
     return raw || "unknown";
   };
 
+  const getRiderName = (rider) => {
+    if (!rider) return "Unknown rider";
+    return (
+      rider.full_name ||
+      rider.fullName ||
+      rider.name ||
+      (rider.first_name && rider.last_name && `${rider.first_name} ${rider.last_name}`) ||
+      rider.email ||
+      rider.user_email ||
+      (rider.user?.first_name && rider.user?.last_name && `${rider.user.first_name} ${rider.user.last_name}`) ||
+      rider.user?.email ||
+      `Rider ${rider.id ?? ""}`
+    );
+  };
+
+  const riderIdMap = useMemo(() => {
+    const map = new Map();
+    riders.forEach((rider) => {
+      const id = rider.id || rider.rider_id || rider.identifier;
+      if (id) {
+        map.set(String(id), getRiderName(rider));
+      }
+    });
+    return map;
+  }, [riders]);
+
   const normalized = useMemo(() => {
     return vehicles.map((vehicle) => {
       const bikeId = vehicle.bike_id || vehicle.identifier || vehicle.id || "";
@@ -80,7 +127,8 @@ const FleetManagement = () => {
         vehicle.assigned_to ||
         vehicle.assigned ||
         "";
-      const assignedText = typeof assigned === "string" ? assigned : JSON.stringify(assigned);
+      const assignedId = String(assigned);
+      const assignedText = riderIdMap.get(assignedId) || assignedId || "Unassigned";
 
       return {
         vehicle,
@@ -94,7 +142,7 @@ const FleetManagement = () => {
         assignedText: String(assignedText),
       };
     });
-  }, [vehicles]);
+  }, [vehicles, riderIdMap]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -147,7 +195,7 @@ const FleetManagement = () => {
   const clampedPage = Math.min(page, totalPages);
   const startIndex = (clampedPage - 1) * PAGE_SIZE;
   const endIndex = Math.min(startIndex + PAGE_SIZE, sorted.length);
-  const pagedVehicles = sorted.slice(startIndex, endIndex).map((item) => item.vehicle);
+  const pagedVehicles = sorted.slice(startIndex, endIndex).map((item) => ({ ...item.vehicle, assignedText: item.assignedText }));
 
   useEffect(() => {
     setPage(1);
@@ -189,6 +237,69 @@ const FleetManagement = () => {
       setEditError(err);
     } finally {
       setEditLoading(false);
+    }
+  };
+
+  const getRidersList = (res) => {
+    const root = res?.data ?? res;
+    const riderList = Array.isArray(root)
+      ? root
+      : root?.data || root?.results || root?.responseDetails?.results || [];
+    return Array.isArray(riderList) ? riderList : [];
+  };
+
+  const handleAssignRequest = async (vehicle) => {
+    setAssignVehicle(vehicle);
+    setAssignError(null);
+    setAssignRiderId("");
+    try {
+      setRidersLoading(true);
+      const res = await fetchRiders();
+      setRiders(getRidersList(res));
+    } catch (err) {
+      console.error("Failed to fetch riders", err);
+      setRiders([]);
+      setAssignError(err);
+    } finally {
+      setRidersLoading(false);
+    }
+  };
+
+  const handleAssignSubmit = async (e) => {
+    e.preventDefault();
+    if (!assignVehicle) return;
+
+    const vehicleIdRaw = assignVehicle.id || assignVehicle.identifier || assignVehicle.bike_id;
+    if (!vehicleIdRaw && vehicleIdRaw !== 0) {
+      setAssignError(new Error("Vehicle id missing. Cannot assign rider."));
+      return;
+    }
+    if (!assignRiderId) {
+      setAssignError(new Error("Please select a rider."));
+      return;
+    }
+
+    const riderId = Number(assignRiderId);
+    const vehicleId = Number(vehicleIdRaw);
+    if (!Number.isFinite(riderId) || !Number.isFinite(vehicleId)) {
+      setAssignError(new Error("Invalid rider or vehicle id."));
+      return;
+    }
+
+    try {
+      setAssignLoading(true);
+      setAssignError(null);
+      await assignVehicleToRider({
+        rider_id: riderId,
+        vehicle_id: vehicleId,
+      });
+      await fetchVehicles();
+      setAssignVehicle(null);
+    } catch (err) {
+      console.error("Failed to assign rider", err);
+      setAssignError(err);
+    } finally {
+      setAssignLoading(false);
     }
   };
 
@@ -345,6 +456,7 @@ const FleetManagement = () => {
         <VehicleTable
           vehicles={pagedVehicles}
           loading={loading}
+          onAssign={handleAssignRequest}
           onEdit={handleEditRequest}
           onDelete={handleDeleteRequest}
         />
@@ -383,6 +495,80 @@ const FleetManagement = () => {
       {/* Drawer */}
       {showAddVehicle && (
         <AddVehicle onClose={() => setShowAddVehicle(false)} onSuccess={fetchVehicles} />
+      )}
+
+      {/* Assign Rider Modal */}
+      {assignVehicle && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/40 z-40 animate-fade-in"
+            onClick={() => !assignLoading && setAssignVehicle(null)}
+          />
+          <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+            <form
+              onSubmit={handleAssignSubmit}
+              className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 md:p-7 animate-slide-up space-y-5 border border-gray-100"
+            >
+              <div>
+                <p className="text-xs uppercase tracking-wide text-gray-500 font-semibold">Vehicle Assignment</p>
+                <h3 className="text-xl font-bold text-gray-900">Assign Rider</h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  Choose a rider to assign to{" "}
+                  <span className="font-semibold text-gray-700">
+                    {assignVehicle.vehicle_name || assignVehicle.name || assignVehicle.identifier || `Vehicle ${assignVehicle.id}`}
+                  </span>
+                  .
+                </p>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-gray-600">Rider</label>
+                <select
+                  value={assignRiderId}
+                  onChange={(e) => setAssignRiderId(e.target.value)}
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#001940] focus:border-[#001940]"
+                  disabled={assignLoading || ridersLoading}
+                >
+                  <option value="">
+                    {ridersLoading ? "Loading riders..." : "Select a rider"}
+                  </option>
+                  {riders.map((rider) => (
+                    <option key={rider.id || rider.user_id} value={rider.id || rider.user_id}>
+                      {getRiderName(rider)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {assignError && (
+                <div className="text-sm text-red-700 bg-red-50 border border-red-100 rounded-lg p-2">
+                  {assignError.response?.data?.message || assignError.message || "Unable to assign rider. Please try again."}
+                </div>
+              )}
+
+              <div className="flex justify-end gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setAssignVehicle(null)}
+                  disabled={assignLoading}
+                  className="px-4 py-2 text-sm rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={assignLoading || ridersLoading || !assignRiderId}
+                  className="px-5 py-2 text-sm rounded-lg bg-[#001940] text-white font-semibold hover:shadow-md disabled:opacity-70 flex items-center gap-2"
+                >
+                  {assignLoading && (
+                    <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  )}
+                  Assign
+                </button>
+              </div>
+            </form>
+          </div>
+        </>
       )}
 
       {/* Delete Confirmation */}

@@ -8,8 +8,8 @@ export default {
   theme: {
     extend: {
       colors: {
-        "": "#2E0086",
-        "": "#127801",
+        primary: "#030229",
+        secondary: "#605BFF",
       },
       backgroundImage: {
         "auth-bike": "url('/src/assets/auth-image.png')",

@@ -18,6 +18,7 @@ import Signup from "../pages/RidersManagement/AddRider/Signup";
 import PersonalInfo from "../pages/RidersManagement/AddRider/PersonalInfo";
 import LegalLicensing from "../pages/RidersManagement/AddRider/LegalLicensing";
 import DocumentUpload from "../pages/RidersManagement/AddRider/DocumentUpload";
+import Security from "../pages/Settings/Security";
 
 const AppRoutes = () => {
   return (
@@ -41,6 +42,7 @@ const AppRoutes = () => {
                 <Route path="/riders-management/add-rider/personal-info" element={<PersonalInfo/>} />
                 <Route path="/riders-management/add-rider/legal-licensing" element={<LegalLicensing/>} />
                 <Route path="/riders-management/add-rider/document-upload" element={<DocumentUpload/>} />
+                <Route path="/settings/security" element={<Security />} />
               </Route>
             </Route>
             <Route path="/reset_password" element={<ResetPassword />} />

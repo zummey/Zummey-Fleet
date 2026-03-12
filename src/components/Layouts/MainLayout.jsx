@@ -20,6 +20,7 @@ import {
 const MainLayout = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [openSubmenu, setOpenSubmenu] = useState(null); // Track which submenu is open
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -69,8 +70,9 @@ const MainLayout = () => {
       label: "Settings",
       hasSubmenu: true,
       submenuItems: [
-        { path: "/settings/profile", label: "Profile" },
-        { path: "/settings/security", label: "Security" },
+        { path: "/settings/profile", label: "Account Settings" },
+        { path: "/settings/security", label: "Security & Privacy" },
+        { path: "/settings/alerts", label: "Notifications & Alerts" },
       ],
     },
     { path: "/help", icon: HelpCircle, label: "Help & Support" },
@@ -357,7 +359,7 @@ const MainLayout = () => {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-6 bg-gray-50">
+        <main className={`flex-1 overflow-y-auto bg-gray-50 ${location.pathname.startsWith('/settings') ? '' : 'p-6'}`}>
           <Outlet />
         </main>
       </div>

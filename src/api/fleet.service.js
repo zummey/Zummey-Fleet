@@ -54,6 +54,14 @@ export const getAllVehicles = async () => {
   return response.data;
 };
 
+// Assign a rider to a vehicle
+export const assignVehicleToRider = (data) => {
+  if (!data || (!data.rider_id && data.rider_id !== 0) || (!data.vehicle_id && data.vehicle_id !== 0)) {
+    return Promise.reject(new Error("Both rider_id and vehicle_id are required for assignment"));
+  }
+  return api.post("/fleet/vehicles/assign/", data);
+};
+
 export const getOngoingOrders = async () => {
   const response = await api.get('/bookings/v1/bookings/requests/');
   return response.data;
@@ -75,4 +83,42 @@ export const deleteVehicle = (id) => {
   }
   // Backend endpoint: /fleet/vehicles/<id>/delete/
   return api.delete(`/fleet/vehicles/${id}/delete/`);
+};
+
+/**
+ * GET PRESIGNED URL FOR VEHICLE FILE UPLOAD
+ * POST /common/v1/files/uploads/
+ * Returns presigned S3 URL and asset_id for uploading vehicle files
+ */
+export const getVehiclePresignedUrl = ({ filename, filesize, use_case, vehicle_id }) => {
+  const payload = {
+    filename,
+    filesize,
+    use_case,
+  };
+  if (vehicle_id) {
+    payload.vehicle_id = vehicle_id;
+  }
+  return api.post('/common/v1/files/uploads/', payload);
+};
+
+/**
+ * UPLOAD FILE TO S3
+ * PUT to presigned URL
+ * Uploads file directly to S3 using presigned URL
+ */
+export const uploadToS3 = async (presignedUrl, file) => {
+  const response = await fetch(presignedUrl, {
+    method: 'PUT',
+    body: file,
+    headers: {
+      'Content-Type': file.type,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`S3 upload failed: ${response.statusText}`);
+  }
+
+  return response;
 };
