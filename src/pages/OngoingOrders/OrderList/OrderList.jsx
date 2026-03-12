@@ -60,6 +60,11 @@ const OrderList = () => {
       if (!filters.status.includes(order.status)) return false;
     }
 
+    if (filters.driverName) {
+      const name = (order.rider_name || `Rider ${order.rider_profile_id || ''}`).toLowerCase();
+      if (!name.includes(filters.driverName.toLowerCase())) return false;
+    }
+
     if (filters.orderId) {
       if (
         !order.request_id.toLowerCase().includes(filters.orderId.toLowerCase())
