@@ -15,7 +15,6 @@ html *::after {
   --bg-hero-pattern: url('/src/assets/auth-image.png');
   --color-primary: #030229;
   --color-secondary: #605BFF;
-
 }
 
 @layer utilities {
