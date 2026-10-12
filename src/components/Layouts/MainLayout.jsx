@@ -4,6 +4,8 @@ import Logo from "../../assets/logo.png";
 import { getNotifications } from "../../api/notifications.service";
 import { useLogout } from "../../api/auth.mutations";
 import { clearAuth } from "../../auth/auth.store";
+import { useAdminStore } from "../../store/admin.store";
+import Switch from "../Ui/Switch";
 
 import {
   ChevronDown,
@@ -23,6 +25,8 @@ const MainLayout = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [openSubmenu, setOpenSubmenu] = useState(null); // Track which submenu is open
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const isAdmin = useAdminStore((state) => state.isAdmin);
+  const setIsAdmin = useAdminStore((state) => state.setIsAdmin);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -378,6 +382,8 @@ const MainLayout = () => {
                 <Bell size={20} className="text-gray-600" />
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
               </button>
+
+              <Switch checked={isAdmin} onChange={setIsAdmin} label="Admin" />
 
               <div className="w-10 h-10 rounded-full border-2 border-gray-200 cursor-pointer hover:border-[#EB4827] transition-colors flex items-center justify-center bg-[#FFF4E8] text-gray-900 font-semibold">
                 {initials || "?"}
