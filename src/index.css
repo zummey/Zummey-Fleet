@@ -15,6 +15,12 @@ html *::after {
   --bg-hero-pattern: url('/src/assets/auth-image.png');
   --color-primary: #030229;
   --color-secondary: #605BFF;
+  --animate-fade-in-up: fade-in-up 0.3s ease-out;
+
+  @keyframes fade-in-up {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 }
 
 @layer utilities {

@@ -21,6 +21,7 @@ import DocumentUpload from "../pages/RidersManagement/AddRider/DocumentUpload";
 import Security from "../pages/Settings/Security";
 import FinanceReports from "../pages/FinanceReports/FinanceReports";
 import AllTransactions from "../pages/FinanceReports/TransactionHistory/AllTransactions";
+import AdminDashboard from "../pages/admin/Dashboard/AdminDashboard";
 
 const AppRoutes = () => {
   return (
@@ -54,6 +55,7 @@ const AppRoutes = () => {
                 <Route path="/riders-management/add-rider/document-upload" element={<DocumentUpload />} />
                 <Route path="/finance-reports" element={<FinanceReports />} />
                 <Route path="/finance-reports/all-transactions" element={<AllTransactions />} />
+                <Route path="/admin/dashboard" element={<AdminDashboard />} />
               </Route>
             </Route>
             <Route path="/reset_password" element={<ResetPassword />} />
