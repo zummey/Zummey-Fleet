@@ -1,5 +1,5 @@
 import React from "react";
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import AuthLayout from "../components/Layouts/AuthLayout";
 import SignUp from "../pages/auth/SignUp";
 import Login from "../pages/auth/Login";
@@ -22,6 +22,9 @@ import Security from "../pages/Settings/Security";
 import FinanceReports from "../pages/FinanceReports/FinanceReports";
 import AllTransactions from "../pages/FinanceReports/TransactionHistory/AllTransactions";
 import AdminDashboard from "../pages/admin/Dashboard/AdminDashboard";
+import AdminSwitch from "../pages/admin/AdminSwitch";
+import AdminFleetManagement from "../pages/admin/FleetManagement/AdminFleetManagement";
+import AdminFleetDetails from "../pages/admin/FleetManagement/details/AdminFleetDetails";
 
 const AppRoutes = () => {
   return (
@@ -36,7 +39,14 @@ const AppRoutes = () => {
             <Route element={<MainLayout />}>
               <Route element={<ProtectedRoute />}>
                 <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/fleet-management" element={<FleetManagement />} />
+                <Route
+                  path="/fleet-management"
+                  element={<AdminSwitch admin={<AdminFleetManagement />} fallback={<FleetManagement />} />}
+                />
+                <Route
+                  path="/fleet-management/:fleetId"
+                  element={<AdminSwitch admin={<AdminFleetDetails />} fallback={<Navigate to="/fleet-management" replace />} />}
+                />
                 <Route path="/notifications" element={<Notifications />} />
                 <Route path="/order-management/track-orders" element={<TrackOrders/>} />
                 <Route path="/order-management/order-list" element={<OrderList/>} />
