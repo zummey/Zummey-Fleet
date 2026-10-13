@@ -45,3 +45,101 @@ const MOCK_ADMIN_STATS = {
 
 export const getAdminDashboardStats = () =>
   new Promise((resolve) => setTimeout(() => resolve(MOCK_ADMIN_STATS), 600));
+
+// ---------------------------------------------------------------------------
+// Fleet management (admin)
+// TODO: Replace mocks with real endpoints once the backend is ready, e.g.
+//   getFleetOwners      -> api.get("/admin/fleets/", { params: { page, page_size } })
+//   getFleetDetails     -> api.get(`/admin/fleets/${id}/`)
+//   getFleetRiders      -> api.get(`/admin/fleets/${id}/riders/`)
+//   getFleetVehicles    -> api.get(`/admin/fleets/${id}/vehicles/`)
+//   getFleetPerformance -> api.get(`/admin/fleets/${id}/performance/`)
+// ---------------------------------------------------------------------------
+
+const delay = (data, ms = 500) => new Promise((resolve) => setTimeout(() => resolve(data), ms));
+
+const COMPANIES = [
+  ["Swift Parcel Ltd", "Godwin Ise"],
+  ["Edo Express Logistics", "Osaro Igbinosa"],
+  ["RapidRide Couriers", "Amaka Obi"],
+  ["Benin Dispatch Co.", "Efosa Omoregie"],
+  ["GreenLane Movers", "Tunde Bakare"],
+  ["Prime Route Ltd", "Ngozi Eze"],
+];
+const FLEET_STATUSES = ["active", "active", "active", "suspended", "active", "pending"];
+
+const MOCK_FLEETS = Array.from({ length: 24 }, (_, i) => {
+  const [companyName, contactPerson] = COMPANIES[i % COMPANIES.length];
+  return {
+    id: String(230 + i),
+    fleetCode: `ZFL - ${230 + i}`,
+    companyName,
+    contactPerson,
+    ridersCount: 12 + (i % 5),
+    vehiclesCount: 18 + (i % 7),
+    status: FLEET_STATUSES[i % FLEET_STATUSES.length],
+  };
+});
+
+const findFleet = (id) => MOCK_FLEETS.find((f) => f.id === String(id));
+
+export const getFleetOwners = ({ page = 1, pageSize = 10 } = {}) => {
+  const start = (page - 1) * pageSize;
+  return delay({
+    results: MOCK_FLEETS.slice(start, start + pageSize),
+    count: MOCK_FLEETS.length,
+    totalPages: Math.max(1, Math.ceil(MOCK_FLEETS.length / pageSize)),
+  });
+};
+
+export const getFleetDetails = (id) => {
+  const fleet = findFleet(id);
+  if (!fleet) return Promise.reject(new Error("Fleet not found"));
+
+  return delay({
+    ...fleet,
+    owner: fleet.contactPerson,
+    phone: "08131240611",
+    email: "zummey@gmail.com",
+    businessAddress: "24 Sub Street, New Lagos Road, Benin City",
+    dateJoined: "2026-07-24",
+    cac: {
+      registrationNumber: "RC 1829374",
+      dateRegistered: "2021-08-04",
+      registeredName: fleet.companyName,
+      document: {
+        name: "CAC Certificate pdf",
+        uploadedAt: "2026-10-12T16:09:00",
+        url: null, // backend will supply a file URL
+      },
+    },
+  });
+};
+
+export const getFleetRiders = (id) =>
+  delay(
+    Array.from({ length: 8 }, (_, i) => ({
+      id: String(563856 + i),
+      name: ["Uche Kalu", "Ifeanyi Okafor", "Bola Ade", "Musa Bello"][i % 4],
+      phone: `0801234567${i}`,
+      assignedVehicle: `BIKE00${1234 + i}`,
+      status: i % 3 === 2 ? "offline" : "online",
+      fleetId: String(id),
+    }))
+  );
+
+export const getFleetVehicles = (id) =>
+  delay(
+    Array.from({ length: 8 }, (_, i) => ({
+      id: `BIKE00${123 + i}`,
+      name: ["Yamaha FZ-S V3", "Honda CB125F", "Bajaj Boxer 150"][i % 3],
+      manufacturer: ["Yamaha", "Honda", "Bajaj"][i % 3],
+      licenseNo: `ABJ-${567 + i}XY`,
+      gpsTrackerSn: `GPS456${789 + i}`,
+      status: i % 4 === 3 ? "offline" : "online",
+      fleetId: String(id),
+    }))
+  );
+
+export const getFleetPerformance = () =>
+  delay({ completedOrders: 96, averageRating: 4.7, onTimeRate: 96, revenue: 208_000 });
