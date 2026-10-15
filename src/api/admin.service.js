@@ -1,4 +1,5 @@
 // import api from "./axios";
+import CertificateImage from "../assets/certificate.png";
 
 // TODO: Replace with the real endpoint once the backend is ready, e.g.
 //   export const getAdminDashboardStats = async () => {
@@ -54,6 +55,7 @@ export const getAdminDashboardStats = () =>
 //   getFleetRiders      -> api.get(`/admin/fleets/${id}/riders/`)
 //   getFleetVehicles    -> api.get(`/admin/fleets/${id}/vehicles/`)
 //   getFleetPerformance -> api.get(`/admin/fleets/${id}/performance/`)
+//   submitFleetReview   -> api.post(`/admin/fleets/${id}/review/`, payload)
 // ---------------------------------------------------------------------------
 
 const delay = (data, ms = 500) => new Promise((resolve) => setTimeout(() => resolve(data), ms));
@@ -108,12 +110,32 @@ export const getFleetDetails = (id) => {
       dateRegistered: "2021-08-04",
       registeredName: fleet.companyName,
       document: {
-        name: "CAC Certificate pdf",
+        name: "CAC Certificate",
+        mimeType: "image/png",
+        sizeBytes: 476134,
         uploadedAt: "2026-10-12T16:09:00",
-        url: null, // backend will supply a file URL
+        url: CertificateImage, // mock asset — backend will supply the real file URL
       },
     },
+    logo: { name: "logo.png", url: null },
+    lastReview: fleet.lastReview ?? null,
   });
+};
+
+// Review decisions: "approve" | "reject" | "clarify".
+// TODO: replace with the real endpoint, e.g.
+//   api.post(`/admin/fleets/${fleetId}/review/`, { decision, note, checklist })
+const REVIEW_RESULT_STATUS = { approve: "active", reject: "rejected", clarify: "clarification" };
+
+export const submitFleetReview = ({ fleetId, decision, note = "", checklist = {} }) => {
+  const fleet = findFleet(fleetId);
+  if (!fleet) return Promise.reject(new Error("Fleet not found"));
+  if (!REVIEW_RESULT_STATUS[decision]) return Promise.reject(new Error(`Unknown decision "${decision}"`));
+
+  // Mutate the mock so the list and details pages reflect the decision after refetch
+  fleet.status = REVIEW_RESULT_STATUS[decision];
+  fleet.lastReview = { decision, note, checklist, reviewedAt: new Date().toISOString() };
+  return delay({ fleetId: fleet.id, status: fleet.status, review: fleet.lastReview }, 700);
 };
 
 export const getFleetRiders = (id) =>

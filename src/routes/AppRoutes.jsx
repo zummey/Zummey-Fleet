@@ -25,6 +25,7 @@ import AdminDashboard from "../pages/admin/Dashboard/AdminDashboard";
 import AdminSwitch from "../pages/admin/AdminSwitch";
 import AdminFleetManagement from "../pages/admin/FleetManagement/AdminFleetManagement";
 import AdminFleetDetails from "../pages/admin/FleetManagement/details/AdminFleetDetails";
+import FleetReview from "../pages/admin/FleetManagement/review/FleetReview";
 
 const AppRoutes = () => {
   return (
@@ -46,6 +47,10 @@ const AppRoutes = () => {
                 <Route
                   path="/fleet-management/:fleetId"
                   element={<AdminSwitch admin={<AdminFleetDetails />} fallback={<Navigate to="/fleet-management" replace />} />}
+                />
+                <Route
+                  path="/fleet-management/:fleetId/review"
+                  element={<AdminSwitch admin={<FleetReview />} fallback={<Navigate to="/fleet-management" replace />} />}
                 />
                 <Route path="/notifications" element={<Notifications />} />
                 <Route path="/order-management/track-orders" element={<TrackOrders/>} />

@@ -1,5 +1,5 @@
 import React from "react";
-import { CircleCheck, CircleX, Clock, RotateCcw } from "lucide-react";
+import { CircleCheck, CircleX, Clock, MessageCircleQuestion, RotateCcw } from "lucide-react";
 import { formatLongDate } from "../adminFleet.config";
 import CompanyLogo from "../../../../assets/avatar.png";
 
@@ -7,6 +7,8 @@ const APPROVAL = {
   active: { label: "Approved", icon: CircleCheck, className: "bg-green-50 text-green-600" },
   suspended: { label: "Suspended", icon: CircleX, className: "bg-red-50 text-red-500" },
   pending: { label: "Pending", icon: Clock, className: "bg-amber-50 text-amber-600" },
+  rejected: { label: "Rejected", icon: CircleX, className: "bg-red-50 text-red-500" },
+  clarification: { label: "Needs Clarification", icon: MessageCircleQuestion, className: "bg-blue-50 text-blue-600" },
 };
 
 const Field = ({ label, value }) => (

@@ -41,7 +41,7 @@ const AdminFleetManagement = () => {
         navigate(`/fleet-management/${fleet.id}`);
         break;
       case "review":
-        navigate(`/fleet-management/${fleet.id}?tab=cac`);
+        navigate(`/fleet-management/${fleet.id}/review`);
         break;
       case "suspend":
       case "delete":
@@ -92,7 +92,7 @@ const AdminFleetManagement = () => {
                         {col.label}
                       </th>
                     ))}
-                    <th className="py-3">
+                    <th className="relative py-3">
                       <span className="sr-only">Actions</span>
                     </th>
                   </tr>
