@@ -4,7 +4,7 @@
 // list page (columns, row actions, page size), status badges,
 // detail tabs, and performance metric cards.
 
-import { Eye, ClipboardCheck, Ban, Trash2 } from "lucide-react";
+import { Eye, ClipboardCheck, Ban, Trash2, CircleCheck, CircleX, MessageCircleQuestion } from "lucide-react";
 import { FORMATTERS } from "../Dashboard/adminDashboard.config";
 
 // ---- List page --------------------------------------------------------------
@@ -40,6 +40,8 @@ export const STATUS_BADGES = {
   offline: { label: "Offline", className: "bg-red-50 text-red-500" },
   suspended: { label: "Suspended", className: "bg-red-50 text-red-500" },
   pending: { label: "Pending", className: "bg-amber-50 text-amber-600" },
+  rejected: { label: "Rejected", className: "bg-red-50 text-red-500" },
+  clarification: { label: "Needs Clarification", className: "bg-blue-50 text-blue-600" },
 };
 
 // ---- Details page -----------------------------------------------------------
@@ -77,6 +79,58 @@ export const PERFORMANCE_METRICS = [
   { key: "revenue", label: "Revenue", format: FORMATTERS.currency },
 ];
 
+// ---- Review page --------------------------------------------------------------
+
+// All items must be ticked before "Approve" is enabled.
+// Unticked items pre-fill the "Request Clarification" message.
+export const REVIEW_CHECKLIST = [
+  { id: "certificateLegible", label: "Certificate is legible" },
+  { id: "registrationMatches", label: "Registration number matches" },
+  { id: "addressProvided", label: "Business address provided" },
+  { id: "logoAcceptable", label: "Logo is acceptable" },
+];
+
+// Order here is the button order on the page
+export const REVIEW_DECISIONS = [
+  {
+    id: "approve",
+    label: "Approve",
+    icon: CircleCheck,
+    buttonClass: "bg-green-500 text-white hover:bg-green-600 disabled:bg-green-200",
+    confirmClass: "bg-green-500 text-white hover:bg-green-600",
+    title: "Approve this fleet?",
+    description: "The fleet owner will be notified and can start operating on Zummey.",
+    requiresNote: false,
+    requiresChecklist: true,
+    notePlaceholder: "Optional note to the fleet owner",
+    successMessage: "Fleet approved",
+  },
+  {
+    id: "reject",
+    label: "Reject",
+    icon: CircleX,
+    buttonClass: "border border-red-400 bg-white text-red-500 hover:bg-red-50",
+    confirmClass: "bg-red-500 text-white hover:bg-red-600",
+    title: "Reject this fleet?",
+    description: "Tell the fleet owner why their application was rejected.",
+    requiresNote: true,
+    notePlaceholder: "Reason for rejection",
+    successMessage: "Fleet rejected",
+  },
+  {
+    id: "clarify",
+    label: "Request Clarification",
+    icon: MessageCircleQuestion,
+    buttonClass: "bg-blue-500 text-white hover:bg-blue-600",
+    confirmClass: "bg-blue-500 text-white hover:bg-blue-600",
+    title: "Request clarification",
+    description: "The fleet owner will be asked to update their documents.",
+    requiresNote: true,
+    notePlaceholder: "What does the fleet owner need to fix or clarify?",
+    successMessage: "Clarification requested",
+  },
+];
+
 // ---- Shared formatting --------------------------------------------------------
 
 export const formatLongDate = (value) =>
@@ -88,6 +142,12 @@ export const formatShortDate = (value) =>
   value
     ? new Date(value).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
     : "—";
+
+export const formatFileSize = (bytes) => {
+  if (!bytes) return "";
+  if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
+  return `${Math.round(bytes / 1024)}KB`;
+};
 
 export const formatDateTime = (value) =>
   value
