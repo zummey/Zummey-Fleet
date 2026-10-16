@@ -1,5 +1,5 @@
 import React from "react";
-import { STATUS_BADGES } from "../adminFleet.config";
+import { STATUS_BADGES } from "./statusBadges.config";
 
 const StatusBadge = ({ status }) => {
   const badge = STATUS_BADGES[status] ?? { label: status ?? "—", className: "bg-gray-100 text-gray-500" };

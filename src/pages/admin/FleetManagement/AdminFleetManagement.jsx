@@ -3,10 +3,10 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import AdminStatCard from "../Dashboard/AdminStatCard";
 import AdminStatsSkeleton from "../Dashboard/AdminStatsSkeleton";
 import { getTabById } from "../Dashboard/adminDashboard.config";
-import StatusBadge from "./components/StatusBadge";
-import RowActionsMenu from "./components/RowActionsMenu";
-import Pagination from "./components/Pagination";
-import ErrorBox from "./components/ErrorBox";
+import StatusBadge from "../components/StatusBadge";
+import RowActionsMenu from "../components/RowActionsMenu";
+import Pagination from "../components/Pagination";
+import ErrorBox from "../components/ErrorBox";
 import {
   FLEET_OWNER_COLUMNS,
   FLEET_PAGE_SIZE,

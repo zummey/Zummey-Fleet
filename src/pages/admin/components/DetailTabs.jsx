@@ -1,7 +1,10 @@
 import React, { useRef } from "react";
 
-/** Underline-style tabs used on the fleet details page (WAI-ARIA tabs pattern). */
-const DetailTabs = ({ tabs, activeTab, onChange }) => {
+/**
+ * Underline-style tabs for admin details pages (WAI-ARIA tabs pattern).
+ * idPrefix: tab ids are `${idPrefix}-tab-${id}`; the panel should use `${idPrefix}-panel-${id}`.
+ */
+const DetailTabs = ({ tabs, activeTab, onChange, label = "Details", idPrefix = "detail" }) => {
   const tabRefs = useRef({});
 
   const handleKeyDown = (e, index) => {
@@ -18,18 +21,18 @@ const DetailTabs = ({ tabs, activeTab, onChange }) => {
   };
 
   return (
-    <div role="tablist" aria-label="Fleet details" className="no-scrollbar flex gap-8 overflow-x-auto">
+    <div role="tablist" aria-label={label} className="no-scrollbar flex gap-8 overflow-x-auto">
       {tabs.map((tab, index) => {
         const isActive = tab.id === activeTab;
         return (
           <button
             key={tab.id}
             ref={(el) => (tabRefs.current[tab.id] = el)}
-            id={`fleet-tab-${tab.id}`}
+            id={`${idPrefix}-tab-${tab.id}`}
             role="tab"
             type="button"
             aria-selected={isActive}
-            aria-controls={`fleet-panel-${tab.id}`}
+            aria-controls={`${idPrefix}-panel-${tab.id}`}
             tabIndex={isActive ? 0 : -1}
             onClick={() => onChange(tab.id)}
             onKeyDown={(e) => handleKeyDown(e, index)}
