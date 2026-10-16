@@ -31,19 +31,6 @@ export const FLEET_ROW_ACTIONS = [
   { id: "delete", label: "Delete Fleet", icon: Trash2, danger: true },
 ];
 
-// ---- Status badges ----------------------------------------------------------
-
-export const STATUS_BADGES = {
-  active: { label: "Active", className: "bg-green-50 text-green-600" },
-  approved: { label: "Approved", className: "bg-green-50 text-green-600" },
-  online: { label: "Online", className: "bg-green-50 text-green-600" },
-  offline: { label: "Offline", className: "bg-red-50 text-red-500" },
-  suspended: { label: "Suspended", className: "bg-red-50 text-red-500" },
-  pending: { label: "Pending", className: "bg-amber-50 text-amber-600" },
-  rejected: { label: "Rejected", className: "bg-red-50 text-red-500" },
-  clarification: { label: "Needs Clarification", className: "bg-blue-50 text-blue-600" },
-};
-
 // ---- Details page -----------------------------------------------------------
 
 export const DETAIL_TAB_QUERY_PARAM = "tab";
@@ -131,31 +118,6 @@ export const REVIEW_DECISIONS = [
   },
 ];
 
-// ---- Shared formatting --------------------------------------------------------
+// ---- Shared formatting (re-exported so existing fleet imports keep working) ----
 
-export const formatLongDate = (value) =>
-  value
-    ? new Date(value).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
-    : "—";
-
-export const formatShortDate = (value) =>
-  value
-    ? new Date(value).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
-    : "—";
-
-export const formatFileSize = (bytes) => {
-  if (!bytes) return "";
-  if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
-  return `${Math.round(bytes / 1024)}KB`;
-};
-
-export const formatDateTime = (value) =>
-  value
-    ? new Date(value).toLocaleString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
-      })
-    : "—";
+export { formatLongDate, formatShortDate, formatFileSize, formatDateTime } from "../components/formatters";

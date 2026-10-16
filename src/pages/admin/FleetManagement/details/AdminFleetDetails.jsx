@@ -2,13 +2,13 @@ import React from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
 import FleetProfileCard from "./FleetProfileCard";
-import DetailTabs from "./DetailTabs";
+import DetailTabs from "../../components/DetailTabs";
 import CacDetailsTab from "./CacDetailsTab";
 import FleetRidersTab from "./FleetRidersTab";
 import FleetVehiclesTab from "./FleetVehiclesTab";
 import PerformanceMetricsTab from "./PerformanceMetricsTab";
-import ErrorBox from "../components/ErrorBox";
-import ProfileSkeleton from "./ProfileSkeleton";
+import ErrorBox from "../../components/ErrorBox";
+import ProfileSkeleton from "../../components/ProfileSkeleton";
 import { DETAIL_TAB_QUERY_PARAM, FLEET_DETAIL_TABS, getDetailTabById } from "../adminFleet.config";
 import { useFleetDetails } from "../../../../api/admin.queries";
 
@@ -66,7 +66,13 @@ const AdminFleetDetails = () => {
         <>
           <FleetProfileCard fleet={fleet.data} onToggleSuspend={handleToggleSuspend} />
 
-          <DetailTabs tabs={FLEET_DETAIL_TABS} activeTab={activeTab.id} onChange={handleTabChange} />
+          <DetailTabs
+            tabs={FLEET_DETAIL_TABS}
+            activeTab={activeTab.id}
+            onChange={handleTabChange}
+            label="Fleet details"
+            idPrefix="fleet"
+          />
 
           <section
             key={activeTab.id}

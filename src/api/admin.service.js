@@ -165,3 +165,182 @@ export const getFleetVehicles = (id) =>
 
 export const getFleetPerformance = () =>
   delay({ completedOrders: 96, averageRating: 4.7, onTimeRate: 96, revenue: 208_000 });
+
+// ---------------------------------------------------------------------------
+// User management: customers (admin)
+// TODO: Replace mocks with real endpoints once the backend is ready, e.g.
+//   getCustomers -> api.get("/admin/customers/", { params: { page, page_size, search, status, min_orders } })
+// ---------------------------------------------------------------------------
+
+const FIRST_NAMES = ["Uche", "Amina", "Tolu", "Chidi", "Efe", "Kemi", "Osas", "Ngozi", "Ibrahim", "Zainab"];
+const LAST_NAMES = ["Kalu", "Bello", "Adeyemi", "Okafor", "Omoregie", "Eze", "Igbinedion", "Usman"];
+const CUSTOMER_STATUSES = ["active", "active", "active", "inactive", "active", "suspended"];
+
+const MOCK_CUSTOMERS = Array.from({ length: 57 }, (_, i) => {
+  const first = FIRST_NAMES[i % FIRST_NAMES.length];
+  const last = LAST_NAMES[(i * 3) % LAST_NAMES.length];
+  const joined = new Date(2026, 6, 6);
+  joined.setDate(joined.getDate() + i * 2);
+  return {
+    id: String(10102 + i),
+    code: `ZUM-${10102 + i}`,
+    name: `${first} ${last}`,
+    phone: `0704567${String(9109 + i).padStart(4, "0")}`,
+    email: `${first}.${last}${i}@gmail.com`.toLowerCase(),
+    status: CUSTOMER_STATUSES[i % CUSTOMER_STATUSES.length],
+    totalOrders: (i * 7) % 40,
+    dateJoined: joined.toISOString().slice(0, 10),
+  };
+});
+
+const filterCustomers = ({ search = "", status = "all", minOrders = 0 }) => {
+  const term = search.trim().toLowerCase();
+  return MOCK_CUSTOMERS.filter(
+    (c) =>
+      (status === "all" || c.status === status) &&
+      c.totalOrders >= minOrders &&
+      (!term || [c.name, c.code, c.phone, c.email].some((v) => v.toLowerCase().includes(term)))
+  );
+};
+
+export const getCustomers = ({ page = 1, pageSize = 10, search, status, minOrders } = {}) => {
+  const matches = filterCustomers({ search, status, minOrders });
+  const start = (page - 1) * pageSize;
+  return delay({
+    results: matches.slice(start, start + pageSize),
+    count: matches.length,
+    totalPages: Math.max(1, Math.ceil(matches.length / pageSize)),
+  });
+};
+
+// Every customer matching the given search/filters (none = all customers), for export
+export const exportCustomers = ({ search, status, minOrders } = {}) =>
+  delay(filterCustomers({ search, status, minOrders }), 400);
+
+// ---------------------------------------------------------------------------
+// Customer details (admin)
+// TODO: Replace mocks with real endpoints once the backend is ready, e.g.
+//   getCustomerDetails    -> api.get(`/admin/customers/${id}/`)
+//   getCustomerOrders     -> api.get(`/admin/customers/${id}/orders/`, { params: { page, page_size, search } })
+//   getCustomerComplaints -> api.get(`/admin/customers/${id}/complaints/`, { params: { search } })
+//   getCustomerPayments   -> api.get(`/admin/customers/${id}/payments/`, { params: { page, page_size, search } })
+//   updateCustomerStatus  -> api.patch(`/admin/customers/${id}/`, { status })
+//   deleteCustomer        -> api.delete(`/admin/customers/${id}/`)
+// List responses: { results, count (matching search), total (all for this customer), totalPages }
+// ---------------------------------------------------------------------------
+
+const findCustomer = (id) => MOCK_CUSTOMERS.find((c) => c.id === String(id));
+
+const PLACES = ["Ring Road", "New Benin", "Ugbowo", "Sapele Road", "Airport Road", "Uselu", "Ekenwan Road"];
+const ORDER_STATUSES = ["delivered", "delivered", "delivered", "in_transit", "cancelled", "delivered", "pending"];
+const PAYMENT_METHODS = ["Card", "Card", "Transfer", "Wallet"];
+const PAYMENT_STATUSES = ["successful", "successful", "refunded", "successful", "failed", "successful"];
+const COMPLAINT_TEMPLATES = [
+  ["Late Delivery", "Rider arrived 40 minutes after the estimated time.", "resolved"],
+  ["Damaged item", "Package arrived with a torn seal.", "open"],
+  ["Wrong address", "Rider went to the wrong drop-off point.", "in_review"],
+  ["Overcharged", "Charged twice for the same order.", "resolved"],
+];
+
+const daysAgo = (n, hour = 12) => {
+  const d = new Date(2026, 9, 9, hour);
+  d.setDate(d.getDate() - n);
+  return d.toISOString();
+};
+
+// Deterministic per-customer history so each customer always shows the same data
+const historyFor = (customer) => {
+  const seed = Number(customer.id);
+  const orders = Array.from({ length: Math.max(customer.totalOrders, 3) }, (_, i) => ({
+    id: `GHS${String(seed * 7 + i * 13).padStart(5, "0")}HG`,
+    pickup: PLACES[(seed + i) % PLACES.length],
+    destination: PLACES[(seed + i * 3 + 1) % PLACES.length],
+    amount: 2500 + ((seed + i * 37) % 12) * 250,
+    status: ORDER_STATUSES[(seed + i) % ORDER_STATUSES.length],
+    date: daysAgo(i * 3),
+  }));
+  const payments = orders.map((order, i) => ({
+    id: `PAY-${780120 + seed * 3 + i}`,
+    orderId: order.id,
+    method: PAYMENT_METHODS[(seed + i) % PAYMENT_METHODS.length],
+    amount: order.amount,
+    status: PAYMENT_STATUSES[(seed + i) % PAYMENT_STATUSES.length],
+    date: order.date,
+  }));
+  const complaints = Array.from({ length: 1 + (seed % 4) }, (_, i) => {
+    const [title, description, status] = COMPLAINT_TEMPLATES[(seed + i) % COMPLAINT_TEMPLATES.length];
+    return {
+      id: `CMP-${2200 + (seed % 100) + i * 5}`,
+      title,
+      description,
+      status,
+      orderId: orders[i]?.id,
+      date: daysAgo(6 + i * 17),
+    };
+  });
+  return { orders, payments, complaints };
+};
+
+const matchesSearch = (row, keys, search = "") => {
+  const term = search.trim().toLowerCase();
+  return !term || keys.some((k) => String(row[k] ?? "").toLowerCase().includes(term));
+};
+
+const paginate = (all, matches, page = 1, pageSize = 10) => ({
+  results: matches.slice((page - 1) * pageSize, page * pageSize),
+  count: matches.length,
+  total: all.length,
+  totalPages: Math.max(1, Math.ceil(matches.length / pageSize)),
+});
+
+const withCustomer = (id, fn) => {
+  const customer = findCustomer(id);
+  return customer ? fn(customer) : Promise.reject(new Error("Customer not found"));
+};
+
+export const getCustomerDetails = (id) =>
+  withCustomer(id, (customer) =>
+    delay({
+      ...customer,
+      address: PLACES[Number(customer.id) % PLACES.length],
+      lastOrderAt: historyFor(customer).orders[0]?.date ?? null,
+    })
+  );
+
+export const getCustomerOrders = (id, { page, pageSize, search } = {}) =>
+  withCustomer(id, (customer) => {
+    const { orders } = historyFor(customer);
+    const matches = orders.filter((o) => matchesSearch(o, ["id", "pickup", "destination", "status"], search));
+    return delay(paginate(orders, matches, page, pageSize));
+  });
+
+export const getCustomerPayments = (id, { page, pageSize, search } = {}) =>
+  withCustomer(id, (customer) => {
+    const { payments } = historyFor(customer);
+    const matches = payments.filter((p) => matchesSearch(p, ["id", "orderId", "method", "status"], search));
+    return delay(paginate(payments, matches, page, pageSize));
+  });
+
+// Complaints are few per customer, so they come back unpaginated
+export const getCustomerComplaints = (id, { search } = {}) =>
+  withCustomer(id, (customer) => {
+    const { complaints } = historyFor(customer);
+    const matches = complaints.filter((c) => matchesSearch(c, ["id", "title", "description", "status"], search));
+    return delay({ results: matches, count: matches.length, total: complaints.length, totalPages: 1 });
+  });
+
+// Full (unsearched) history for "All ..." exports. kind: "orders" | "complaints" | "payments"
+export const exportCustomerHistory = (id, kind) =>
+  withCustomer(id, (customer) => delay(historyFor(customer)[kind], 300));
+
+export const updateCustomerStatus = ({ customerId, status }) =>
+  withCustomer(customerId, (customer) => {
+    customer.status = status;
+    return delay({ id: customer.id, status }, 500);
+  });
+
+export const deleteCustomer = ({ customerId }) =>
+  withCustomer(customerId, (customer) => {
+    MOCK_CUSTOMERS.splice(MOCK_CUSTOMERS.indexOf(customer), 1);
+    return delay({ id: customer.id }, 500);
+  });

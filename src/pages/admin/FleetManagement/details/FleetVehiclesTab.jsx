@@ -1,6 +1,6 @@
 import React from "react";
 import SearchableTable from "./SearchableTable";
-import StatusBadge from "../components/StatusBadge";
+import StatusBadge from "../../components/StatusBadge";
 import { FLEET_VEHICLE_COLUMNS } from "../adminFleet.config";
 import { useFleetVehicles } from "../../../../api/admin.queries";
 import VehicleThumb from "../../../../assets/avatar.png";

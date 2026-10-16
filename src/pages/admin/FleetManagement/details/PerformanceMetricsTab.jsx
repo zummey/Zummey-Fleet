@@ -1,5 +1,5 @@
 import React from "react";
-import ErrorBox from "../components/ErrorBox";
+import ErrorBox from "../../components/ErrorBox";
 import { PERFORMANCE_METRICS } from "../adminFleet.config";
 import { useFleetPerformance } from "../../../../api/admin.queries";
 

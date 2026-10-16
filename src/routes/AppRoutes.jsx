@@ -26,6 +26,9 @@ import AdminSwitch from "../pages/admin/AdminSwitch";
 import AdminFleetManagement from "../pages/admin/FleetManagement/AdminFleetManagement";
 import AdminFleetDetails from "../pages/admin/FleetManagement/details/AdminFleetDetails";
 import FleetReview from "../pages/admin/FleetManagement/review/FleetReview";
+import Customers from "../pages/admin/UserManagement/Customers/Customers";
+import CustomerDetails from "../pages/admin/UserManagement/Customers/details/CustomerDetails";
+import AdminRiders from "../pages/admin/UserManagement/Riders/AdminRiders";
 
 const AppRoutes = () => {
   return (
@@ -52,10 +55,26 @@ const AppRoutes = () => {
                   path="/fleet-management/:fleetId/review"
                   element={<AdminSwitch admin={<FleetReview />} fallback={<Navigate to="/fleet-management" replace />} />}
                 />
+                <Route
+                  path="/user-management"
+                  element={<AdminSwitch admin={<Navigate to="/user-management/customers" replace />} fallback={<Navigate to="/dashboard" replace />} />}
+                />
+                <Route
+                  path="/user-management/customers"
+                  element={<AdminSwitch admin={<Customers />} fallback={<Navigate to="/dashboard" replace />} />}
+                />
+                <Route
+                  path="/user-management/customers/:customerId"
+                  element={<AdminSwitch admin={<CustomerDetails />} fallback={<Navigate to="/dashboard" replace />} />}
+                />
+                <Route
+                  path="/user-management/riders"
+                  element={<AdminSwitch admin={<AdminRiders />} fallback={<Navigate to="/riders-management" replace />} />}
+                />
                 <Route path="/notifications" element={<Notifications />} />
                 <Route path="/order-management/track-orders" element={<TrackOrders/>} />
                 <Route path="/order-management/order-list" element={<OrderList/>} />
-                <Route path="/riders-management" element={<RidersManagement/>} />
+                <Route path="/riders-management" element={<AdminSwitch admin={<Navigate to="/user-management/riders" replace />} fallback={<RidersManagement />} />} />
                 <Route path="/riders-management/add-rider/signup" element={<Signup/>} />
                 <Route path="/riders-management/add-rider/personal-info" element={<PersonalInfo/>} />
                 <Route path="/riders-management/add-rider/legal-licensing" element={<LegalLicensing/>} />
@@ -63,7 +82,7 @@ const AppRoutes = () => {
                 <Route path="/settings/security" element={<Security />} />
                 <Route path="/order-management/track-orders" element={<TrackOrders />} />
                 <Route path="/order-management/order-list" element={<OrderList />} />
-                <Route path="/riders-management" element={<RidersManagement />} />
+                <Route path="/riders-management" element={<AdminSwitch admin={<Navigate to="/user-management/riders" replace />} fallback={<RidersManagement />} />} />
                 <Route path="/riders-management/add-rider/signup" element={<Signup />} />
                 <Route path="/riders-management/add-rider/personal-info" element={<PersonalInfo />} />
                 <Route path="/riders-management/add-rider/legal-licensing" element={<LegalLicensing />} />

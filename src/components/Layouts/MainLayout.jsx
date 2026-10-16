@@ -19,6 +19,7 @@ import {
   Search,
   ChevronRight,
   LogOut,
+  UserCog,
 } from "lucide-react";
 
 const MainLayout = () => {
@@ -46,11 +47,23 @@ const MainLayout = () => {
       icon: Truck,
       label: "Fleet Management",
     },
-    {
-      path: "/riders-management",
-      icon: Users,
-      label: "Riders Management",
-    },
+    // Admins manage riders under User Management; fleet owners get Riders Management directly
+    isAdmin
+      ? {
+          path: "/user-management",
+          icon: UserCog,
+          label: "User Management",
+          hasSubmenu: true,
+          submenuItems: [
+            { path: "/user-management/customers", label: "Customers" },
+            { path: "/user-management/riders", label: "Riders" },
+          ],
+        }
+      : {
+          path: "/riders-management",
+          icon: Users,
+          label: "Riders Management",
+        },
     {
       path: "/order-management",
       icon: ClipboardList,
@@ -103,6 +116,15 @@ const MainLayout = () => {
     const poll = setInterval(fetchUnreadNotifications, 30000);
     return () => clearInterval(poll);
   }, [location.pathname]);
+
+  // Keep the dropdown that contains the current page open (e.g. after a refresh or a direct link)
+  useEffect(() => {
+    const parent = [...navItems, ...bottomNavItems].find(
+      (item) => item.hasSubmenu && location.pathname.startsWith(item.path)
+    );
+    if (parent) setOpenSubmenu(parent.path);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- nav items are rebuilt every render
+  }, [location.pathname, isAdmin]);
 
   const isActive = (path) => {
     return location.pathname === path || location.pathname.startsWith(path);

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Search } from "lucide-react";
-import ErrorBox from "../components/ErrorBox";
+import ErrorBox from "../../components/ErrorBox";
 
 /**
  * Card-row table with a client-side search box, shared by the

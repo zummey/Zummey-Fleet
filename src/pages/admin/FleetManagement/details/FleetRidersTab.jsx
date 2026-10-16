@@ -1,6 +1,6 @@
 import React from "react";
 import SearchableTable from "./SearchableTable";
-import StatusBadge from "../components/StatusBadge";
+import StatusBadge from "../../components/StatusBadge";
 import { FLEET_RIDER_COLUMNS } from "../adminFleet.config";
 import { useFleetRiders } from "../../../../api/admin.queries";
 

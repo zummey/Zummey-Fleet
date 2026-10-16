@@ -6,6 +6,11 @@ import {
   getFleetRiders,
   getFleetVehicles,
   getFleetPerformance,
+  getCustomers,
+  getCustomerDetails,
+  getCustomerOrders,
+  getCustomerComplaints,
+  getCustomerPayments,
 } from "./admin.service";
 
 export const useAdminDashboardStats = () => {
@@ -63,6 +68,57 @@ export const useFleetPerformance = (fleetId) => {
     queryKey: ["admin", "fleets", fleetId, "performance"],
     queryFn: () => getFleetPerformance(fleetId),
     enabled: !!fleetId,
+    staleTime: 2 * 60 * 1000,
+    retry: 2,
+  });
+};
+
+export const useCustomers = ({ page, pageSize, search, status, minOrders }) => {
+  return useQuery({
+    queryKey: ["admin", "customers", "list", { page, pageSize, search, status, minOrders }],
+    queryFn: () => getCustomers({ page, pageSize, search, status, minOrders }),
+    placeholderData: keepPreviousData, // keep the table visible while the next page/filter loads
+    staleTime: 2 * 60 * 1000,
+    retry: 2,
+  });
+};
+
+// Result count for a not-yet-applied filter selection ("Show N Results")
+export const useCustomerCount = ({ search, status, minOrders }, { enabled = true } = {}) => {
+  return useQuery({
+    queryKey: ["admin", "customers", "count", { search, status, minOrders }],
+    // TODO: swap for a dedicated count endpoint if the backend provides one
+    queryFn: () => getCustomers({ page: 1, pageSize: 1, search, status, minOrders }),
+    select: (data) => data.count,
+    enabled,
+    placeholderData: keepPreviousData,
+    staleTime: 2 * 60 * 1000,
+  });
+};
+
+export const useCustomerDetails = (customerId) => {
+  return useQuery({
+    queryKey: ["admin", "customers", "detail", customerId],
+    queryFn: () => getCustomerDetails(customerId),
+    enabled: !!customerId,
+    staleTime: 2 * 60 * 1000,
+    retry: 1,
+  });
+};
+
+// Order / complaint / payment history tabs share one shape: { results, count, total, totalPages }
+const CUSTOMER_HISTORY_FETCHERS = {
+  orders: getCustomerOrders,
+  complaints: getCustomerComplaints,
+  payments: getCustomerPayments,
+};
+
+export const useCustomerHistory = (customerId, kind, { page, pageSize, search }) => {
+  return useQuery({
+    queryKey: ["admin", "customers", "detail", customerId, kind, { page, pageSize, search }],
+    queryFn: () => CUSTOMER_HISTORY_FETCHERS[kind](customerId, { page, pageSize, search }),
+    enabled: !!customerId,
+    placeholderData: keepPreviousData,
     staleTime: 2 * 60 * 1000,
     retry: 2,
   });
