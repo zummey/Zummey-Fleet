@@ -344,3 +344,161 @@ export const deleteCustomer = ({ customerId }) =>
     MOCK_CUSTOMERS.splice(MOCK_CUSTOMERS.indexOf(customer), 1);
     return delay({ id: customer.id }, 500);
   });
+
+// ---------------------------------------------------------------------------
+// User management: riders (admin)
+// Supports search, status, riderType, and minDeliveries filtering.
+// Falls back seamlessly to mock riders if backend API is unavailable/empty.
+// ---------------------------------------------------------------------------
+
+const RIDER_FIRST_NAMES = [
+  "Musa",
+  "Emeka",
+  "Babatunde",
+  "Chinedu",
+  "Ibrahim",
+  "Taye",
+  "Osaze",
+  "Femi",
+  "Suleiman",
+  "Victor",
+  "Amina",
+  "Kemi",
+];
+
+const RIDER_LAST_NAMES = [
+  "Bello",
+  "Okafor",
+  "Adeyemi",
+  "Eze",
+  "Aliyu",
+  "Taiwo",
+  "Omoregie",
+  "Balogun",
+  "Abubakar",
+  "Idowu",
+  "Nwachukwu",
+  "Sanusi",
+];
+
+const RIDER_STATUSES = ["active", "online", "active", "offline", "active", "pending", "suspended"];
+const RIDER_FLEETS = [
+  "Swift Parcel Ltd",
+  "Edo Express Logistics",
+  "RapidRide Couriers",
+  "Benin Dispatch Co.",
+  null,
+  "GreenLane Movers",
+];
+
+export const MOCK_ADMIN_RIDERS = Array.from({ length: 54 }, (_, i) => {
+  const first = RIDER_FIRST_NAMES[i % RIDER_FIRST_NAMES.length];
+  const last = RIDER_LAST_NAMES[(i * 3) % RIDER_LAST_NAMES.length];
+  const fleet = RIDER_FLEETS[i % RIDER_FLEETS.length];
+  const joined = new Date(2026, 4, 10);
+  joined.setDate(joined.getDate() + i * 3);
+  return {
+    id: String(8010 + i),
+    code: `ZRD-${8010 + i}`,
+    firstName: first,
+    lastName: last,
+    name: `${first} ${last}`,
+    phone: `0803456${String(1200 + i).padStart(4, "0")}`,
+    email: `${first}.${last}${i}@zummeyrider.com`.toLowerCase(),
+    riderType: fleet ? "Fleet Rider" : "Independent",
+    fleet: fleet ?? "Independent",
+    status: RIDER_STATUSES[i % RIDER_STATUSES.length],
+    rating: Number((4.1 + ((i * 7) % 10) * 0.1).toFixed(1)),
+    deliveriesCompleted: 12 + ((i * 19) % 220),
+    dateJoined: joined.toISOString().slice(0, 10),
+    profile_picture_url: null,
+  };
+});
+
+const normalizeApiRider = (r, i) => {
+  const firstName = r.first_name || r.firstName || r.user?.first_name || "";
+  const lastName = r.last_name || r.lastName || r.user?.last_name || "";
+  const name = `${firstName} ${lastName}`.trim() || r.name || `Rider ${i + 1}`;
+  const fleet = r.fleet?.name || r.fleet || null;
+  return {
+    id: String(r.id || r.profile_id || 8010 + i),
+    code: `ZRD-${r.id || r.profile_id || 8010 + i}`,
+    firstName,
+    lastName,
+    name,
+    phone: r.user_phone || r.phoneNumber || r.phone_number || r.user?.phone_number || "—",
+    email: r.user_email || r.email || r.user?.email || "—",
+    riderType: fleet ? "Fleet Rider" : (r.riderType || "Independent"),
+    fleet: fleet ?? "Independent",
+    status: r.is_online === true ? "online" : r.is_online === false ? "offline" : (r.status || "active").toLowerCase(),
+    rating: r.rating ? Number(r.rating) : Number((4.2 + (i % 8) * 0.1).toFixed(1)),
+    deliveriesCompleted: r.total_deliveries ?? r.deliveriesCompleted ?? (10 + ((i * 7) % 50)),
+    dateJoined: r.created_at?.slice(0, 10) || r.date_joined?.slice(0, 10) || "2026-05-10",
+    profile_picture_url: r.profile_picture_url || r.image || null,
+  };
+};
+
+export const fetchAllAdminRiders = async () => {
+  try {
+    const { fetchRiders } = await import("./authRiders");
+    const response = await fetchRiders();
+    const list = Array.isArray(response?.data?.responseDetails?.results)
+      ? response.data.responseDetails.results
+      : Array.isArray(response?.data?.results)
+        ? response.data.results
+        : Array.isArray(response?.data)
+          ? response.data
+          : [];
+    if (list.length > 0) {
+      return list.map(normalizeApiRider);
+    }
+  } catch (_) {
+    // Backend endpoint not active or returned error — fallback to mock
+  }
+  return MOCK_ADMIN_RIDERS;
+};
+
+const filterRiderList = (riders, { search = "", status = "all", riderType = "all", minDeliveries = 0 } = {}) => {
+  const term = search.trim().toLowerCase();
+  return riders.filter((r) => {
+    if (status !== "all" && r.status.toLowerCase() !== status.toLowerCase()) return false;
+    if (riderType !== "all" && r.riderType.toLowerCase() !== riderType.toLowerCase()) return false;
+    if (r.deliveriesCompleted < minDeliveries) return false;
+    if (term) {
+      const match = [r.name, r.code, r.phone, r.email, r.fleet, r.riderType].some((v) =>
+        String(v ?? "").toLowerCase().includes(term)
+      );
+      if (!match) return false;
+    }
+    return true;
+  });
+};
+
+export const getAdminRiders = async ({
+  page = 1,
+  pageSize = 10,
+  search = "",
+  status = "all",
+  riderType = "all",
+  minDeliveries = 0,
+} = {}) => {
+  const allRiders = await fetchAllAdminRiders();
+  const matches = filterRiderList(allRiders, { search, status, riderType, minDeliveries });
+  const start = (page - 1) * pageSize;
+  return delay({
+    results: matches.slice(start, start + pageSize),
+    count: matches.length,
+    totalPages: Math.max(1, Math.ceil(matches.length / pageSize)),
+  });
+};
+
+export const exportAdminRiders = async ({
+  search = "",
+  status = "all",
+  riderType = "all",
+  minDeliveries = 0,
+} = {}) => {
+  const allRiders = await fetchAllAdminRiders();
+  return delay(filterRiderList(allRiders, { search, status, riderType, minDeliveries }), 400);
+};
+

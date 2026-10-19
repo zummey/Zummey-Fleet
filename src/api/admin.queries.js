@@ -11,6 +11,7 @@ import {
   getCustomerOrders,
   getCustomerComplaints,
   getCustomerPayments,
+  getAdminRiders,
 } from "./admin.service";
 
 export const useAdminDashboardStats = () => {
@@ -123,3 +124,28 @@ export const useCustomerHistory = (customerId, kind, { page, pageSize, search })
     retry: 2,
   });
 };
+
+export const useAdminRiders = ({ page, pageSize, search, status, riderType, minDeliveries }) => {
+  return useQuery({
+    queryKey: ["admin", "riders", "list", { page, pageSize, search, status, riderType, minDeliveries }],
+    queryFn: () => getAdminRiders({ page, pageSize, search, status, riderType, minDeliveries }),
+    placeholderData: keepPreviousData,
+    staleTime: 2 * 60 * 1000,
+    retry: 2,
+  });
+};
+
+export const useAdminRiderCount = (
+  { search, status, riderType, minDeliveries },
+  { enabled = true } = {}
+) => {
+  return useQuery({
+    queryKey: ["admin", "riders", "count", { search, status, riderType, minDeliveries }],
+    queryFn: () => getAdminRiders({ page: 1, pageSize: 1, search, status, riderType, minDeliveries }),
+    select: (data) => data.count,
+    enabled,
+    placeholderData: keepPreviousData,
+    staleTime: 2 * 60 * 1000,
+  });
+};
+
