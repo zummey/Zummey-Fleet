@@ -12,6 +12,7 @@ import {
   getCustomerComplaints,
   getCustomerPayments,
   getAdminRiders,
+  getRiderDetails,
 } from "./admin.service";
 
 export const useAdminDashboardStats = () => {
@@ -148,4 +149,15 @@ export const useAdminRiderCount = (
     staleTime: 2 * 60 * 1000,
   });
 };
+
+export const useAdminRiderDetails = (riderId) => {
+  return useQuery({
+    queryKey: ["admin", "riders", "detail", riderId],
+    queryFn: () => getRiderDetails(riderId),
+    enabled: !!riderId,
+    staleTime: 2 * 60 * 1000,
+    retry: 1,
+  });
+};
+
 
