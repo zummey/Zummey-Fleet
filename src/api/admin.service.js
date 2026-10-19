@@ -502,3 +502,86 @@ export const exportAdminRiders = async ({
   return delay(filterRiderList(allRiders, { search, status, riderType, minDeliveries }), 400);
 };
 
+export const getRiderDetails = async (id) => {
+  const allRiders = await fetchAllAdminRiders();
+  const rider = allRiders.find((r) => String(r.id) === String(id)) || allRiders[0];
+  if (!rider) return Promise.reject(new Error("Rider not found"));
+
+  return delay({
+    ...rider,
+    code: rider.code || `ZFL - ${rider.id}`,
+    vehicleType: rider.vehicleType || "Motorbike",
+    fleetName: rider.fleet && rider.fleet !== "Independent" ? rider.fleet : "Swift Logistics",
+    appliedDate: rider.appliedDate || "Applied Oct 12, 2026",
+    documents: [
+      {
+        id: "drivers_license",
+        title: "Drivers License",
+        category: "license",
+        uploadedAt: "Uploaded Oct 8 , 2026",
+        status: "pending",
+        mimeType: "image/png",
+        url: CertificateImage,
+      },
+      {
+        id: "passport_photo",
+        title: "Passport Photograph",
+        category: "identity",
+        uploadedAt: "Uploaded Oct 8 , 2026",
+        status: "pending",
+        mimeType: "image/png",
+        url: CertificateImage,
+      },
+      {
+        id: "government_id",
+        title: "Government ID(NIN)",
+        category: "identity",
+        uploadedAt: "Uploaded Oct 8 , 2026",
+        status: "pending",
+        mimeType: "image/png",
+        url: CertificateImage,
+      },
+      {
+        id: "vehicle_reg",
+        title: "Vehicle Registration",
+        category: "license",
+        uploadedAt: "Uploaded Oct 8 , 2026",
+        status: "pending",
+        mimeType: "image/png",
+        url: CertificateImage,
+      },
+    ],
+    lastReview: rider.lastReview ?? null,
+  });
+};
+
+const RIDER_REVIEW_STATUS = {
+  approve: "active",
+  reject: "rejected",
+  clarify: "clarification",
+};
+
+export const submitRiderReview = async ({
+  riderId,
+  decision,
+  note = "",
+  itemsNeeded = [],
+  reason = "",
+}) => {
+  const allRiders = await fetchAllAdminRiders();
+  const rider = allRiders.find((r) => String(r.id) === String(riderId)) || allRiders[0];
+  if (!rider) return Promise.reject(new Error("Rider not found"));
+
+  rider.status = RIDER_REVIEW_STATUS[decision] || rider.status;
+  rider.lastReview = {
+    decision,
+    note,
+    itemsNeeded,
+    reason,
+    reviewedAt: new Date().toISOString(),
+  };
+
+  return delay({ riderId: rider.id, status: rider.status, review: rider.lastReview }, 600);
+};
+
+

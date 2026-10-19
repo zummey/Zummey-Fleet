@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { deleteCustomer, submitFleetReview, updateCustomerStatus } from "./admin.service";
+import { deleteCustomer, submitFleetReview, updateCustomerStatus, submitRiderReview } from "./admin.service";
 
 /**
  * SUBMIT FLEET REVIEW MUTATION
@@ -22,6 +22,29 @@ export const useSubmitFleetReview = () => {
     },
   });
 };
+
+/**
+ * SUBMIT RIDER REVIEW MUTATION
+ * Used in: pages/admin/UserManagement/Riders/review/RiderReview.jsx
+ * Payload: { riderId, decision: "approve" | "reject" | "clarify", note?, itemsNeeded?, reason? }
+ */
+export const useSubmitRiderReview = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: ["admin", "submitRiderReview"],
+    mutationFn: submitRiderReview,
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "riders"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "riders", "detail", variables.riderId] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "dashboard"] });
+    },
+    onError: (error) => {
+      console.error("❌ Failed to submit rider review:", error.response?.data || error.message);
+    },
+  });
+};
+
 
 /**
  * SUSPEND / REACTIVATE CUSTOMER
