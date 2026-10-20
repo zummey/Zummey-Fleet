@@ -1,8 +1,3 @@
-// src/pages/admin/UserManagement/Riders/details/riderDetails.config.js
-//
-// Single source of truth for the Rider Details page:
-// tabs, profile card fields, sub-panel column definitions.
-
 import { formatLongDate, formatShortDate } from "../../../components/formatters";
 
 export const RIDER_DETAIL_TAB_QUERY_PARAM = "tab";

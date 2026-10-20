@@ -1,14 +1,3 @@
-// src/pages/admin/UserManagement/Riders/details/RiderDetailsPanel.jsx
-//
-// Renders the active tab's content for the Rider Details page.
-// Screens:
-//   1  → "profile"     – Personal Information table (Screen 1)
-//   2  → "documents"   – Rider Documents list with View / Verified (Screen 2)
-//   3  → "vehicle"     – Vehicle Details table (Screen 3)
-//   4  → "performance" – Performance Metrics stat cards (Screen 4)
-//   5  → "deliveries"  – Delivery History paginated table (Screen 5)
-//   6  → "incidents"   – Incident History with stat cards + list + detail modal (Screen 6)
-
 import React, { useEffect, useState } from "react";
 import { Search, AlertTriangle, ChevronRight, FileText } from "lucide-react";
 import StatusBadge from "../../../components/StatusBadge";

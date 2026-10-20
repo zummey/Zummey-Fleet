@@ -1,11 +1,3 @@
-// src/pages/admin/UserManagement/Riders/details/DocumentViewerModal.jsx
-//
-// Lightbox shown when clicking "View" on a rider document row.
-// Matches "screen 2 ride details.PNG":
-//   title bar (Drivers License) + X button
-//   image carousel with prev/next arrows
-//   blurred backdrop
-
 import React, { useState } from "react";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 

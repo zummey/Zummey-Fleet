@@ -1,11 +1,3 @@
-// src/pages/admin/UserManagement/Riders/details/RiderProfileCard.jsx
-//
-// The shared header card shown on every Rider Details tab.
-// Matches the design in screen 1 – 6:
-//   • avatar (image or initials fallback) + name + fleet ID
-//   • Approve / Suspend / Reactivate action buttons
-//   • Rider Type / Fleet / Rating / Deliveries Completed stat row
-
 import React, { useState } from "react";
 import { CheckCircle2, CircleX, RotateCcw } from "lucide-react";
 import { RIDER_STAT_FIELDS } from "./riderDetails.config";
