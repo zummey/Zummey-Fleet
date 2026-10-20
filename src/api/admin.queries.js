@@ -13,6 +13,9 @@ import {
   getCustomerPayments,
   getAdminRiders,
   getRiderDetails,
+  getRiderDeliveries,
+  getRiderPerformance,
+  getRiderIncidents,
 } from "./admin.service";
 
 export const useAdminDashboardStats = () => {
@@ -157,6 +160,38 @@ export const useAdminRiderDetails = (riderId) => {
     enabled: !!riderId,
     staleTime: 2 * 60 * 1000,
     retry: 1,
+  });
+};
+
+export const useRiderDeliveries = (riderId, { page, pageSize, search } = {}) => {
+  return useQuery({
+    queryKey: ["admin", "riders", "deliveries", riderId, { page, pageSize, search }],
+    queryFn: () => getRiderDeliveries(riderId, { page, pageSize, search }),
+    enabled: !!riderId,
+    placeholderData: keepPreviousData,
+    staleTime: 2 * 60 * 1000,
+    retry: 2,
+  });
+};
+
+export const useRiderPerformance = (riderId) => {
+  return useQuery({
+    queryKey: ["admin", "riders", "performance", riderId],
+    queryFn: () => getRiderPerformance(riderId),
+    enabled: !!riderId,
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+  });
+};
+
+export const useRiderIncidents = (riderId, { page, pageSize } = {}) => {
+  return useQuery({
+    queryKey: ["admin", "riders", "incidents", riderId, { page, pageSize }],
+    queryFn: () => getRiderIncidents(riderId, { page, pageSize }),
+    enabled: !!riderId,
+    placeholderData: keepPreviousData,
+    staleTime: 2 * 60 * 1000,
+    retry: 2,
   });
 };
 

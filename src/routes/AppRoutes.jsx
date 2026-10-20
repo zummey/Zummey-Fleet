@@ -30,6 +30,7 @@ import Customers from "../pages/admin/UserManagement/Customers/Customers";
 import CustomerDetails from "../pages/admin/UserManagement/Customers/details/CustomerDetails";
 import AdminRiders from "../pages/admin/UserManagement/Riders/AdminRiders";
 import RiderReview from "../pages/admin/UserManagement/Riders/review/RiderReview";
+import RiderDetails from "../pages/admin/UserManagement/Riders/details/RiderDetails";
 
 const AppRoutes = () => {
   return (
@@ -71,6 +72,10 @@ const AppRoutes = () => {
                 <Route
                   path="/user-management/riders"
                   element={<AdminSwitch admin={<AdminRiders />} fallback={<Navigate to="/riders-management" replace />} />}
+                />
+                <Route
+                  path="/user-management/riders/:riderId"
+                  element={<AdminSwitch admin={<RiderDetails />} fallback={<Navigate to="/riders-management" replace />} />}
                 />
                 <Route
                   path="/user-management/riders/:riderId/review"
