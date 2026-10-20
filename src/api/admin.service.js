@@ -507,11 +507,27 @@ export const getRiderDetails = async (id) => {
   const rider = allRiders.find((r) => String(r.id) === String(id)) || allRiders[0];
   if (!rider) return Promise.reject(new Error("Rider not found"));
 
+  const seed = Number(rider.id) || 8010;
+
   return delay({
     ...rider,
     code: rider.code || `ZFL - ${rider.id}`,
-    vehicleType: rider.vehicleType || "Motorbike",
-    fleetName: rider.fleet && rider.fleet !== "Independent" ? rider.fleet : "Swift Logistics",
+    fleetName: rider.fleet && rider.fleet !== "Independent" ? rider.fleet : "Falcon Fleet",
+    // Profile extras
+    gender: "Male",
+    dob: "14 Mar 2000",
+    address: "22 Airport Road ,Benin City",
+    emergencyContact: `090456${String(7890 + seed).slice(-4)}`,
+    nin: `5439${String(seed * 1234).slice(0, 8)}`,
+    // Vehicle details
+    vehicleType: "Motorbike",
+    vehicleMakeModel: "Suzuki",
+    vehicleYear: "2022",
+    vehiclePlate: `BEN -946XY`,
+    vehicleColor: "Black",
+    gpsTrackerSn: `GPS${64000 + (seed % 1000)}`,
+    insuranceExpiry: "2026-12-18",
+    roadWorthiness: "Valid till Sep 2026",
     appliedDate: rider.appliedDate || "Applied Oct 12, 2026",
     documents: [
       {
@@ -519,7 +535,7 @@ export const getRiderDetails = async (id) => {
         title: "Drivers License",
         category: "license",
         uploadedAt: "Uploaded Oct 8 , 2026",
-        status: "pending",
+        status: "verified",
         mimeType: "image/png",
         url: CertificateImage,
       },
@@ -528,16 +544,16 @@ export const getRiderDetails = async (id) => {
         title: "Passport Photograph",
         category: "identity",
         uploadedAt: "Uploaded Oct 8 , 2026",
-        status: "pending",
+        status: "verified",
         mimeType: "image/png",
         url: CertificateImage,
       },
       {
         id: "government_id",
-        title: "Government ID(NIN)",
+        title: "Government ID (NIN)",
         category: "identity",
         uploadedAt: "Uploaded Oct 8 , 2026",
-        status: "pending",
+        status: "verified",
         mimeType: "image/png",
         url: CertificateImage,
       },
@@ -546,7 +562,7 @@ export const getRiderDetails = async (id) => {
         title: "Vehicle Registration",
         category: "license",
         uploadedAt: "Uploaded Oct 8 , 2026",
-        status: "pending",
+        status: "verified",
         mimeType: "image/png",
         url: CertificateImage,
       },
@@ -582,6 +598,160 @@ export const submitRiderReview = async ({
   };
 
   return delay({ riderId: rider.id, status: rider.status, review: rider.lastReview }, 600);
+};
+
+// ---------------------------------------------------------------------------
+// Rider details sub-resources: profile extras, deliveries, performance, incidents
+// ---------------------------------------------------------------------------
+
+const DELIVERY_PLACES = ["Ring Road", "New Benin", "Ugbowo", "Sapele Road", "Airport Road", "Uselu", "Ekenwan Road"];
+const DELIVERY_STATUSES = ["delivered", "delivered", "delivered", "in_transit", "cancelled", "delivered"];
+
+const riderDeliveryHistory = (riderId) => {
+  const seed = Number(riderId) || 8010;
+  return Array.from({ length: 30 }, (_, i) => {
+    const d = new Date(2026, 5, 1);
+    d.setDate(d.getDate() + i * 2);
+    return {
+      id: `GHS${String(seed * 3 + i * 11).padStart(5, "0")}HG`,
+      pickup: DELIVERY_PLACES[(seed + i) % DELIVERY_PLACES.length],
+      destination: DELIVERY_PLACES[(seed + i * 3 + 1) % DELIVERY_PLACES.length],
+      amount: `${(2500 + ((seed + i * 37) % 12) * 250).toLocaleString()}`,
+      status: DELIVERY_STATUSES[(seed + i) % DELIVERY_STATUSES.length],
+      date: d.toISOString().slice(0, 10),
+    };
+  });
+};
+
+export const getRiderDeliveries = async (riderId, { page = 1, pageSize = 10, search = "" } = {}) => {
+  const all = riderDeliveryHistory(riderId);
+  const term = search.trim().toLowerCase();
+  const matches = term
+    ? all.filter((r) =>
+        [r.id, r.pickup, r.destination, r.status].some((v) =>
+          String(v ?? "").toLowerCase().includes(term)
+        )
+      )
+    : all;
+  const start = (page - 1) * pageSize;
+  return delay({
+    results: matches.slice(start, start + pageSize),
+    count: matches.length,
+    total: all.length,
+    totalPages: Math.max(1, Math.ceil(matches.length / pageSize)),
+  });
+};
+
+export const getRiderPerformance = async (riderId) => {
+  const seed = Number(riderId) || 8010;
+  return delay({
+    averageRating: Number((4.2 + (seed % 8) * 0.1).toFixed(1)),
+    completedDeliveries: 80 + (seed % 40),
+    cancellationRate: 88 + (seed % 10),
+    avgDeliveryTime: 20 + (seed % 15),
+  });
+};
+
+const INCIDENT_TITLES = ["Customer Complaint", "Late Delivery", "Package Damage", "Misconduct"];
+const INCIDENT_STATUSES = [
+  { status: "under_review", statusLabel: "Under Review" },
+  { status: "resolved", statusLabel: "Resolved" },
+  { status: "open", statusLabel: "Open" },
+];
+
+const riderIncidentHistory = (riderId) => {
+  const seed = Number(riderId) || 8010;
+  const count = 2 + (seed % 4);
+  return Array.from({ length: count }, (_, i) => {
+    const st = INCIDENT_STATUSES[(seed + i) % INCIDENT_STATUSES.length];
+    const d = new Date(2026, 9, 6);
+    d.setDate(d.getDate() - i * 5);
+    return {
+      id: String(3100 + seed + i),
+      incidentId: `INC-${3100 + (seed % 100) + i}`,
+      title: INCIDENT_TITLES[(seed + i) % INCIDENT_TITLES.length],
+      description: "Customer Reported a rude interaction at drop-off",
+      category: "Conduct",
+      severity: i === 0 ? "Moderate" : "Low",
+      ...st,
+      date: d.toISOString().slice(0, 10),
+      riderName: `Emeka Nwankwo (RDR-2041)`,
+      dateReported: "Oct 6, 2026",
+      reportedBy: "Customer",
+      relatedDelivery: `DLV-${88150 + i}`,
+      actionTaken:
+        "Rider contacted by support. Awaiting a written statement within 48 hours.",
+      resolutionNotes:
+        "Decision on a formal warning is pending the rider statement.",
+      timeline: [
+        {
+          label: "Incident reported by customer",
+          timestamp: "Oct 6, 2026 - 09:14",
+          state: "done",
+        },
+        {
+          label: "Support review started",
+          timestamp: "Oct 6, 2025 - 11:40",
+          state: "done",
+        },
+        {
+          label: "Awaiting rider statement",
+          timestamp: "In progress",
+          state: "in_progress",
+        },
+      ],
+      attachments: [
+        { name: "Customer complaint.pdf", url: "#" },
+        { name: "Call recording.mp3", url: "#" },
+      ],
+    };
+  });
+};
+
+export const getRiderIncidents = async (riderId, { page = 1, pageSize = 10 } = {}) => {
+  const all = riderIncidentHistory(riderId);
+  const start = (page - 1) * pageSize;
+  const underReview = all.filter((r) => r.status === "under_review").length;
+  return delay({
+    results: all.slice(start, start + pageSize),
+    count: all.length,
+    total: all.length,
+    totalPages: Math.max(1, Math.ceil(all.length / pageSize)),
+    summary: {
+      total: all.length,
+      underReview,
+      major: 92,
+      mostRecent: "Oct 6, 2026",
+    },
+  });
+};
+
+// Update rider status (approve / suspend / reactivate)
+export const updateRiderStatus = async ({ riderId, status }) => {
+  const allRiders = await fetchAllAdminRiders();
+  const rider = allRiders.find((r) => String(r.id) === String(riderId));
+  if (rider) rider.status = status;
+  return delay({ riderId, status }, 500);
+};
+
+// Rider profile extras (gender, DOB, address etc.) — augments getRiderDetails
+export const getRiderProfileExtras = async (riderId) => {
+  const seed = Number(riderId) || 8010;
+  return delay({
+    gender: "Male",
+    dob: "14 Mar 2000",
+    address: "22 Airport Road ,Benin City",
+    emergencyContact: `090456${String(7890 + seed).slice(-4)}`,
+    nin: `5439${String(seed * 1234).slice(0, 8)}`,
+    vehicleType: "Motorbike",
+    vehicleMakeModel: "Suzuki",
+    vehicleYear: "2022",
+    vehiclePlate: `BEN -946XY`,
+    vehicleColor: "Black",
+    gpsTrackerSn: `GPS${64000 + (seed % 1000)}`,
+    insuranceExpiry: "2026-12-18",
+    roadWorthiness: "Valid till Sep 2026",
+  });
 };
 
 
