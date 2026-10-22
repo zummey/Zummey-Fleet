@@ -31,6 +31,8 @@ import CustomerDetails from "../pages/admin/UserManagement/Customers/details/Cus
 import AdminRiders from "../pages/admin/UserManagement/Riders/AdminRiders";
 import RiderReview from "../pages/admin/UserManagement/Riders/review/RiderReview";
 import RiderDetails from "../pages/admin/UserManagement/Riders/details/RiderDetails";
+import AdminOrderManagement from "../pages/admin/OrderManagement/AdminOrderManagement";
+import AdminOrderDetails from "../pages/admin/OrderManagement/details/AdminOrderDetails";
 
 const AppRoutes = () => {
   return (
@@ -82,21 +84,31 @@ const AppRoutes = () => {
                   element={<AdminSwitch admin={<RiderReview />} fallback={<Navigate to="/riders-management" replace />} />}
                 />
                 <Route path="/notifications" element={<Notifications />} />
-                <Route path="/order-management/track-orders" element={<TrackOrders/>} />
-                <Route path="/order-management/order-list" element={<OrderList/>} />
-                <Route path="/riders-management" element={<AdminSwitch admin={<Navigate to="/user-management/riders" replace />} fallback={<RidersManagement />} />} />
-                <Route path="/riders-management/add-rider/signup" element={<Signup/>} />
-                <Route path="/riders-management/add-rider/personal-info" element={<PersonalInfo/>} />
-                <Route path="/riders-management/add-rider/legal-licensing" element={<LegalLicensing/>} />
-                <Route path="/riders-management/add-rider/document-upload" element={<DocumentUpload/>} />
-                <Route path="/settings/security" element={<Security />} />
-                <Route path="/order-management/track-orders" element={<TrackOrders />} />
-                <Route path="/order-management/order-list" element={<OrderList />} />
+                
+                {/* Order Management - Admin gets full order dashboard/details, Non-admin gets track-orders & order-list */}
+                <Route
+                  path="/order-management"
+                  element={<AdminSwitch admin={<AdminOrderManagement />} fallback={<Navigate to="/order-management/order-list" replace />} />}
+                />
+                <Route
+                  path="/order-management/:orderId"
+                  element={<AdminSwitch admin={<AdminOrderDetails />} fallback={<Navigate to="/order-management/order-list" replace />} />}
+                />
+                <Route
+                  path="/order-management/track-orders"
+                  element={<AdminSwitch admin={<Navigate to="/order-management" replace />} fallback={<TrackOrders />} />}
+                />
+                <Route
+                  path="/order-management/order-list"
+                  element={<AdminSwitch admin={<Navigate to="/order-management" replace />} fallback={<OrderList />} />}
+                />
+
                 <Route path="/riders-management" element={<AdminSwitch admin={<Navigate to="/user-management/riders" replace />} fallback={<RidersManagement />} />} />
                 <Route path="/riders-management/add-rider/signup" element={<Signup />} />
                 <Route path="/riders-management/add-rider/personal-info" element={<PersonalInfo />} />
                 <Route path="/riders-management/add-rider/legal-licensing" element={<LegalLicensing />} />
                 <Route path="/riders-management/add-rider/document-upload" element={<DocumentUpload />} />
+                <Route path="/settings/security" element={<Security />} />
                 <Route path="/finance-reports" element={<FinanceReports />} />
                 <Route path="/finance-reports/all-transactions" element={<AllTransactions />} />
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />

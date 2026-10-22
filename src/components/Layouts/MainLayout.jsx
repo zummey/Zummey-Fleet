@@ -64,16 +64,23 @@ const MainLayout = () => {
           icon: Users,
           label: "Riders Management",
         },
-    {
-      path: "/order-management",
-      icon: ClipboardList,
-      label: "Order Management",
-      hasSubmenu: true,
-      submenuItems: [
-        { path: "/order-management/track-orders", label: "Track Orders" },
-        { path: "/order-management/order-list", label: "Order List" },
-      ],
-    },
+    // Admins have direct Order Management dashboard; non-admins have Track Orders & Order List submenus
+    isAdmin
+      ? {
+          path: "/order-management",
+          icon: ClipboardList,
+          label: "Order Management",
+        }
+      : {
+          path: "/order-management",
+          icon: ClipboardList,
+          label: "Order Management",
+          hasSubmenu: true,
+          submenuItems: [
+            { path: "/order-management/track-orders", label: "Track Orders" },
+            { path: "/order-management/order-list", label: "Order List" },
+          ],
+        },
     {
       path: "/finance-reports",
       icon: CreditCard,
