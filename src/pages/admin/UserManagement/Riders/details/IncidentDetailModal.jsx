@@ -1,14 +1,3 @@
-// src/pages/admin/UserManagement/Riders/details/IncidentDetailModal.jsx
-//
-// Fullscreen modal shown when clicking the chevron on an incident row.
-// Matches the design in "screen 6 view.PNG":
-//   INC-3100 · Conduct  |  Customer complaint  |  Moderate / Under review tags
-//   Rider / Date / Reported by / Related delivery
-//   What happened / Action taken / Resolution notes
-//   Timeline (dot list)
-//   Attachments
-//   Close   Mark as resolved
-
 import React from "react";
 import { X, File } from "lucide-react";
 

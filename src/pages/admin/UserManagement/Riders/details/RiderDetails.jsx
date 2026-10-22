@@ -1,11 +1,3 @@
-// src/pages/admin/UserManagement/Riders/details/RiderDetails.jsx
-//
-// Entry page for a single rider — wires together:
-//   • "Riders Details" back-link header
-//   • RiderProfileCard  (shared header card with actions)
-//   • DetailTabs        (Profile / Documents / Vehicle / Performance / Delivery / Incident)
-//   • RiderDetailsPanel (tab content, screens 1-6)
-
 import React, { useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
