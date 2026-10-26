@@ -29,6 +29,7 @@ import FleetReview from "../pages/admin/FleetManagement/review/FleetReview";
 import Customers from "../pages/admin/UserManagement/Customers/Customers";
 import CustomerDetails from "../pages/admin/UserManagement/Customers/details/CustomerDetails";
 import AdminRiders from "../pages/admin/UserManagement/Riders/AdminRiders";
+import AdminFinance from "../pages/admin/Finance/AdminFinance";
 
 const AppRoutes = () => {
   return (
@@ -87,8 +88,11 @@ const AppRoutes = () => {
                 <Route path="/riders-management/add-rider/personal-info" element={<PersonalInfo />} />
                 <Route path="/riders-management/add-rider/legal-licensing" element={<LegalLicensing />} />
                 <Route path="/riders-management/add-rider/document-upload" element={<DocumentUpload />} />
-                <Route path="/finance-reports" element={<FinanceReports />} />
-                <Route path="/finance-reports/all-transactions" element={<AllTransactions />} />
+                <Route path="/finance-reports" element={<AdminSwitch admin={<AdminFinance />} fallback={<FinanceReports />} />} />
+                <Route
+                  path="/finance-reports/all-transactions"
+                  element={<AdminSwitch admin={<Navigate to="/finance-reports?tab=transactions" replace />} fallback={<AllTransactions />} />}
+                />
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
               </Route>
             </Route>

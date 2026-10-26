@@ -1,5 +1,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { deleteCustomer, submitFleetReview, updateCustomerStatus } from "./admin.service";
+import {
+  deleteCustomer,
+  reviewRefund,
+  submitFleetReview,
+  updateCustomerStatus,
+  updatePayout,
+} from "./admin.service";
 
 /**
  * SUBMIT FLEET REVIEW MUTATION
@@ -62,6 +68,47 @@ export const useDeleteCustomer = () => {
     },
     onError: (error) => {
       console.error("❌ Failed to delete customer:", error.response?.data || error.message);
+    },
+  });
+};
+
+/**
+ * APPROVE / HOLD / RELEASE PAYOUT
+ * Used in: pages/admin/Finance/payouts/usePayoutActions.jsx
+ * Payload: { payoutId, action: "approve" | "hold" | "release", reason?, note? }
+ */
+export const useUpdatePayout = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: ["admin", "updatePayout"],
+    mutationFn: updatePayout,
+    onSuccess: () => {
+      // Releasing records a transaction and changes the overview totals
+      queryClient.invalidateQueries({ queryKey: ["admin", "finance"] });
+    },
+    onError: (error) => {
+      console.error("❌ Failed to update payout:", error.response?.data || error.message);
+    },
+  });
+};
+
+/**
+ * APPROVE / REJECT REFUND
+ * Used in: pages/admin/Finance/refunds/useRefundActions.jsx
+ * Payload: { refundId, decision: "approve" | "reject", reason?, message? }
+ */
+export const useReviewRefund = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: ["admin", "reviewRefund"],
+    mutationFn: reviewRefund,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "finance"] });
+    },
+    onError: (error) => {
+      console.error("❌ Failed to review refund:", error.response?.data || error.message);
     },
   });
 };

@@ -344,3 +344,225 @@ export const deleteCustomer = ({ customerId }) =>
     MOCK_CUSTOMERS.splice(MOCK_CUSTOMERS.indexOf(customer), 1);
     return delay({ id: customer.id }, 500);
   });
+
+// ---------------------------------------------------------------------------
+// Finance & Reports (admin)
+// TODO: Replace mocks with real endpoints once the backend is ready, e.g.
+//   getFinanceOverview -> api.get("/admin/finance/overview/")
+//   getRevenueSeries   -> api.get("/admin/finance/revenue/", { params: { range } })   range: 7d | 30d | 12m
+//   getTransactions    -> api.get("/admin/finance/transactions/", { params: { page, page_size, search, type, status } })
+//   getPayouts         -> api.get("/admin/finance/payouts/", { params: { page, page_size } })
+//   updatePayout       -> api.post(`/admin/finance/payouts/${id}/${action}/`, { reason, note })   action: approve | hold | release
+//   getRefunds         -> api.get("/admin/finance/refunds/", { params: { page, page_size } })
+//   reviewRefund       -> api.post(`/admin/finance/refunds/${id}/${decision}/`, { reason, message }) decision: approve | reject
+// List responses: { results, count, totalPages }
+// ---------------------------------------------------------------------------
+
+const PEOPLE = ["Uche Kalu", "Emeka Nwankwo", "Peter Ojo", "Aisha Bello", "Joy John", "Ibrahim Musa", "Tolu Adeyemi", "Efe Omoregie"];
+const TRANSACTION_TYPES = ["order_payment", "order_payment", "withdrawal", "rider_payout", "order_payment", "fleet_settlement", "refund"];
+const TRANSACTION_STATUSES = ["completed", "completed", "completed", "processing", "completed", "failed", "completed"];
+const BANKS = ["Zenith Bank", "GTBank", "Access Bank", "First Bank", "UBA"];
+
+const hoursAgo = (n) => {
+  const d = new Date(2026, 9, 26, 10, 30);
+  d.setMinutes(d.getMinutes() - n * 97);
+  return d.toISOString();
+};
+
+const REFERENCE_PREFIX = {
+  order_payment: "ORD",
+  refund: "RFD",
+  rider_payout: "PYT",
+  fleet_settlement: "STL",
+  withdrawal: "WDR",
+};
+const METHOD_FOR_TYPE = {
+  order_payment: "Card",
+  refund: "Card",
+  rider_payout: "Bank transfer",
+  fleet_settlement: "Bank transfer",
+  withdrawal: "Bank transfer",
+};
+
+const MOCK_TRANSACTIONS = Array.from({ length: 78 }, (_, i) => {
+  const type = TRANSACTION_TYPES[i % TRANSACTION_TYPES.length];
+  const isSmall = type === "order_payment" || type === "refund";
+  return {
+    id: `TXN-${70114 - i}`,
+    type,
+    status: TRANSACTION_STATUSES[(i * 3) % TRANSACTION_STATUSES.length],
+    amount: isSmall ? 2500 + ((i * 37) % 16) * 250 : 20000 + ((i * 53) % 30) * 5000,
+    date: hoursAgo(i),
+    reference: `${REFERENCE_PREFIX[type]}-${48201 - i * 7}`,
+    party: type === "fleet_settlement" ? COMPANIES[i % COMPANIES.length][0] : PEOPLE[i % PEOPLE.length],
+    method: type === "order_payment" ? PAYMENT_METHODS[i % PAYMENT_METHODS.length] : METHOD_FOR_TYPE[type],
+  };
+});
+
+const filterTransactions = ({ search = "", type = "all", status = "any" } = {}) =>
+  MOCK_TRANSACTIONS.filter(
+    (t) =>
+      (type === "all" || t.type === type) &&
+      (status === "any" || t.status === status) &&
+      matchesSearch(t, ["id", "reference", "party", "method"], search)
+  );
+
+const listResponse = (matches, page = 1, pageSize = 10) => ({
+  results: matches.slice((page - 1) * pageSize, page * pageSize),
+  count: matches.length,
+  totalPages: Math.max(1, Math.ceil(matches.length / pageSize)),
+});
+
+export const getTransactions = ({ page, pageSize, search, type, status } = {}) =>
+  delay(listResponse(filterTransactions({ search, type, status }), page, pageSize));
+
+// Every transaction matching the given search/filters (none = all), for export
+export const exportTransactions = (filters) => delay(filterTransactions(filters), 400);
+
+// Releasing a payout or approving a refund records a transaction, like the backend would
+const recordTransaction = ({ type, amount, reference, party, method }) => {
+  const latest = Math.max(...MOCK_TRANSACTIONS.map((t) => Number(t.id.split("-")[1])));
+  MOCK_TRANSACTIONS.unshift({
+    id: `TXN-${latest + 1}`,
+    type,
+    status: "completed",
+    amount,
+    date: new Date().toISOString(),
+    reference,
+    party,
+    method,
+  });
+};
+
+export const getFinanceOverview = () =>
+  delay({
+    revenue: { value: 4_820_000, caption: "+8.6% vs yesterday" },
+    riderPayouts: { value: 1_490_000, caption: "+8.6% vs yesterday" },
+    fleetSettlements: { value: 3_162_000, caption: "+6.1% this month" },
+    refunds: { value: 86_500, caption: "2% vs last week" },
+  });
+
+const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+const MONTHLY_REVENUE = [540_000, 330_000, 590_000, 450_000, 220_000, 280_000, 320_000, 720_000, 480_000, 610_000, 680_000, 630_000];
+
+// Points: [{ label, amount }]
+export const getRevenueSeries = (range = "12m") => {
+  if (range === "12m") return delay(MONTHS.map((label, i) => ({ label, amount: MONTHLY_REVENUE[i] })));
+
+  const days = range === "7d" ? 7 : 30;
+  const end = new Date(2026, 9, 26);
+  return delay(
+    Array.from({ length: days }, (_, i) => {
+      const d = new Date(end);
+      d.setDate(end.getDate() - (days - 1 - i));
+      return {
+        label:
+          days === 7
+            ? d.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase()
+            : d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+        amount: 8_000 + ((i * 7919 + days * 31) % 23) * 1_100,
+      };
+    })
+  );
+};
+
+// Payouts. status: pending_approval -> approved -> released, with on_hold possible before release
+const PAYOUT_STATUSES = ["pending_approval", "approved", "on_hold", "released"];
+
+const MOCK_PAYOUTS = Array.from({ length: 26 }, (_, i) => {
+  const isFleet = i % 5 === 4;
+  const status = PAYOUT_STATUSES[i % PAYOUT_STATUSES.length];
+  return {
+    id: `PYT-${5120 + i}`,
+    recipientType: isFleet ? "fleet" : "rider",
+    recipient: {
+      name: isFleet ? COMPANIES[i % COMPANIES.length][0] : PEOPLE[i % PEOPLE.length],
+      code: isFleet ? `ZFL-${230 + i}` : `ZUM-${10102 + i}`,
+    },
+    deliveries: 40 + ((i * 17) % 60),
+    amount: 30_000 + ((i * 41) % 40) * 450,
+    status,
+    bank: { name: BANKS[i % BANKS.length], last4: String(1096 + i * 37).slice(-4) },
+    paidAt: status === "released" ? daysAgo(i % 9) : null,
+    hold: status === "on_hold" ? { reason: "bank_verification", note: "" } : null,
+  };
+});
+
+// Which statuses each action may be applied from (rejects stale actions, e.g. two admins at once)
+const PAYOUT_TRANSITIONS = {
+  approve: { from: ["pending_approval"], to: "approved" },
+  hold: { from: ["pending_approval", "approved"], to: "on_hold" },
+  release: { from: ["approved", "on_hold"], to: "released" },
+};
+
+export const getPayouts = ({ page, pageSize } = {}) => delay(listResponse(MOCK_PAYOUTS, page, pageSize));
+
+export const updatePayout = ({ payoutId, action, reason, note = "" }) => {
+  const payout = MOCK_PAYOUTS.find((p) => p.id === payoutId);
+  const transition = PAYOUT_TRANSITIONS[action];
+  if (!payout) return Promise.reject(new Error("Payout not found"));
+  if (!transition) return Promise.reject(new Error(`Unknown payout action "${action}"`));
+  if (!transition.from.includes(payout.status)) {
+    return Promise.reject(new Error("This payout has already been updated. Refresh to see its latest status."));
+  }
+
+  payout.status = transition.to;
+  if (action === "hold") payout.hold = { reason, note, heldAt: new Date().toISOString() };
+  if (action === "release") {
+    payout.paidAt = new Date().toISOString();
+    payout.hold = null;
+    recordTransaction({
+      type: payout.recipientType === "fleet" ? "fleet_settlement" : "rider_payout",
+      amount: payout.amount,
+      reference: payout.id,
+      party: payout.recipient.name,
+      method: "Bank transfer",
+    });
+  }
+  return delay({ id: payout.id, status: payout.status }, 600);
+};
+
+// Refunds. status: pending_approval -> approved | rejected
+const REFUND_REASONS = ["Failed Delivery", "Damaged Item", "Late Delivery", "Wrong Item", "Failed Delivery"];
+const REFUND_STATUSES = ["pending_approval", "approved", "rejected", "pending_approval"];
+
+const MOCK_REFUNDS = Array.from({ length: 22 }, (_, i) => {
+  const status = REFUND_STATUSES[i % REFUND_STATUSES.length];
+  return {
+    id: `RFD-${3301 + i}`,
+    orderId: `ORD-${48205 - i * 3}`,
+    requestedAt: daysAgo(5 + i),
+    customer: PEOPLE[(i + 4) % PEOPLE.length],
+    reason: REFUND_REASONS[i % REFUND_REASONS.length],
+    amount: 3_000 + ((i * 29) % 12) * 250,
+    method: PAYMENT_METHODS[i % PAYMENT_METHODS.length],
+    status,
+    decidedAt: status === "pending_approval" ? null : daysAgo(4 + i),
+    decision: null,
+  };
+});
+
+export const getRefunds = ({ page, pageSize } = {}) => delay(listResponse(MOCK_REFUNDS, page, pageSize));
+
+export const reviewRefund = ({ refundId, decision, reason, message = "" }) => {
+  const refund = MOCK_REFUNDS.find((r) => r.id === refundId);
+  if (!refund) return Promise.reject(new Error("Refund not found"));
+  if (!["approve", "reject"].includes(decision)) return Promise.reject(new Error(`Unknown decision "${decision}"`));
+  if (refund.status !== "pending_approval") {
+    return Promise.reject(new Error("This refund has already been reviewed. Refresh to see its latest status."));
+  }
+
+  refund.status = decision === "approve" ? "approved" : "rejected";
+  refund.decidedAt = new Date().toISOString();
+  refund.decision = { reason, message };
+  if (decision === "approve") {
+    recordTransaction({
+      type: "refund",
+      amount: refund.amount,
+      reference: refund.id,
+      party: refund.customer,
+      method: refund.method,
+    });
+  }
+  return delay({ id: refund.id, status: refund.status }, 600);
+};

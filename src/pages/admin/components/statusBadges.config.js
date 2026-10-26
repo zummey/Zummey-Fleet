@@ -1,4 +1,5 @@
-// Shared status -> badge styles for every admin table (fleets, customers, riders, vehicles).
+// Shared status -> badge styles for every admin table (fleets, customers, riders, vehicles, finance).
+// A screen can override individual entries via StatusBadge's `badges` prop.
 
 export const STATUS_BADGES = {
   active: { label: "Active", className: "bg-green-50 text-green-600" },
@@ -22,4 +23,10 @@ export const STATUS_BADGES = {
   open: { label: "Open", className: "bg-red-50 text-red-500" },
   in_review: { label: "In Review", className: "bg-amber-50 text-amber-600" },
   resolved: { label: "Resolved", className: "bg-green-50 text-green-600" },
+  // finance (transactions, payouts, refunds)
+  completed: { label: "Completed", className: "bg-green-50 text-green-600" },
+  processing: { label: "Processing", className: "bg-gray-100 text-gray-600" },
+  pending_approval: { label: "Pending approval", className: "bg-orange-50 text-orange-500" },
+  on_hold: { label: "On hold", className: "bg-orange-50 text-orange-500" },
+  released: { label: "Released", className: "bg-green-50 text-green-600" },
 };

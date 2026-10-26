@@ -11,6 +11,11 @@ import {
   getCustomerOrders,
   getCustomerComplaints,
   getCustomerPayments,
+  getFinanceOverview,
+  getRevenueSeries,
+  getTransactions,
+  getPayouts,
+  getRefunds,
 } from "./admin.service";
 
 export const useAdminDashboardStats = () => {
@@ -120,6 +125,71 @@ export const useCustomerHistory = (customerId, kind, { page, pageSize, search })
     enabled: !!customerId,
     placeholderData: keepPreviousData,
     staleTime: 2 * 60 * 1000,
+    retry: 2,
+  });
+};
+
+// ---- Finance & Reports ------------------------------------------------------
+
+export const useFinanceOverview = () => {
+  return useQuery({
+    queryKey: ["admin", "finance", "overview"],
+    queryFn: getFinanceOverview,
+    staleTime: 2 * 60 * 1000,
+    retry: 2,
+  });
+};
+
+// range: "7d" | "30d" | "12m"
+export const useRevenueSeries = (range) => {
+  return useQuery({
+    queryKey: ["admin", "finance", "revenue", range],
+    queryFn: () => getRevenueSeries(range),
+    placeholderData: keepPreviousData, // keep the old bars while the new range loads
+    staleTime: 5 * 60 * 1000,
+    retry: 2,
+  });
+};
+
+export const useTransactions = ({ page, pageSize, search, type, status }) => {
+  return useQuery({
+    queryKey: ["admin", "finance", "transactions", "list", { page, pageSize, search, type, status }],
+    queryFn: () => getTransactions({ page, pageSize, search, type, status }),
+    placeholderData: keepPreviousData,
+    staleTime: 60 * 1000,
+    retry: 2,
+  });
+};
+
+// Result count for a not-yet-applied filter selection ("Show N Results")
+export const useTransactionCount = ({ search, type, status }, { enabled = true } = {}) => {
+  return useQuery({
+    queryKey: ["admin", "finance", "transactions", "count", { search, type, status }],
+    // TODO: swap for a dedicated count endpoint if the backend provides one
+    queryFn: () => getTransactions({ page: 1, pageSize: 1, search, type, status }),
+    select: (data) => data.count,
+    enabled,
+    placeholderData: keepPreviousData,
+    staleTime: 60 * 1000,
+  });
+};
+
+export const usePayouts = ({ page, pageSize }) => {
+  return useQuery({
+    queryKey: ["admin", "finance", "payouts", { page, pageSize }],
+    queryFn: () => getPayouts({ page, pageSize }),
+    placeholderData: keepPreviousData,
+    staleTime: 60 * 1000,
+    retry: 2,
+  });
+};
+
+export const useRefunds = ({ page, pageSize }) => {
+  return useQuery({
+    queryKey: ["admin", "finance", "refunds", { page, pageSize }],
+    queryFn: () => getRefunds({ page, pageSize }),
+    placeholderData: keepPreviousData,
+    staleTime: 60 * 1000,
     retry: 2,
   });
 };
