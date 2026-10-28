@@ -50,37 +50,37 @@ const MainLayout = () => {
     // Admins manage riders under User Management; fleet owners get Riders Management directly
     isAdmin
       ? {
-          path: "/user-management",
-          icon: UserCog,
-          label: "User Management",
-          hasSubmenu: true,
-          submenuItems: [
-            { path: "/user-management/customers", label: "Customers" },
-            { path: "/user-management/riders", label: "Riders" },
-          ],
-        }
+        path: "/user-management",
+        icon: UserCog,
+        label: "User Management",
+        hasSubmenu: true,
+        submenuItems: [
+          { path: "/user-management/customers", label: "Customers" },
+          { path: "/user-management/riders", label: "Riders" },
+        ],
+      }
       : {
-          path: "/riders-management",
-          icon: Users,
-          label: "Riders Management",
-        },
+        path: "/riders-management",
+        icon: Users,
+        label: "Riders Management",
+      },
     // Admins have direct Order Management dashboard; non-admins have Track Orders & Order List submenus
     isAdmin
       ? {
-          path: "/order-management",
-          icon: ClipboardList,
-          label: "Order Management",
-        }
+        path: "/order-management",
+        icon: ClipboardList,
+        label: "Order Management",
+      }
       : {
-          path: "/order-management",
-          icon: ClipboardList,
-          label: "Order Management",
-          hasSubmenu: true,
-          submenuItems: [
-            { path: "/order-management/track-orders", label: "Track Orders" },
-            { path: "/order-management/order-list", label: "Order List" },
-          ],
-        },
+        path: "/order-management",
+        icon: ClipboardList,
+        label: "Order Management",
+        hasSubmenu: true,
+        submenuItems: [
+          { path: "/order-management/track-orders", label: "Track Orders" },
+          { path: "/order-management/order-list", label: "Order List" },
+        ],
+      },
     {
       path: "/finance-reports",
       icon: CreditCard,
@@ -97,7 +97,6 @@ const MainLayout = () => {
       hasSubmenu: true,
       submenuItems: [
         { path: "/settings/profile", label: "Account Settings" },
-        { path: "/settings/security", label: "Security & Privacy" },
         { path: "/settings/alerts", label: "Notifications & Alerts" },
       ],
     },
@@ -302,7 +301,7 @@ const MainLayout = () => {
                       w-full flex items-center gap-3 px-3.5 py-3 rounded-lg relative
                       transition-all duration-200 text-sm font-medium
                       ${active
-                        ? "bg-purple-50 text-purple-700"
+                        ? "text-zummey-primary bg-zummey-bg"
                         : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                       }
                     `}
@@ -348,7 +347,7 @@ const MainLayout = () => {
                                 w-full text-left px-3 py-2 rounded-md text-sm
                                 transition-all duration-200
                                 ${subActive
-                                  ? "bg-purple-50 text-purple-700 font-medium"
+                                  ? "text-zummey-primary bg-zummey-bg font-medium"
                                   : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                                 }
                               `}

@@ -18,7 +18,8 @@ import Signup from "../pages/RidersManagement/AddRider/Signup";
 import PersonalInfo from "../pages/RidersManagement/AddRider/PersonalInfo";
 import LegalLicensing from "../pages/RidersManagement/AddRider/LegalLicensing";
 import DocumentUpload from "../pages/RidersManagement/AddRider/DocumentUpload";
-import Security from "../pages/Settings/Security";
+import Profile from "../pages/Settings/Profile";
+import NotificationSettings from "../pages/Settings/NotificationSettings";
 import FinanceReports from "../pages/FinanceReports/FinanceReports";
 import AllTransactions from "../pages/FinanceReports/TransactionHistory/AllTransactions";
 import AdminDashboard from "../pages/admin/Dashboard/AdminDashboard";
@@ -108,7 +109,9 @@ const AppRoutes = () => {
                 <Route path="/riders-management/add-rider/personal-info" element={<PersonalInfo />} />
                 <Route path="/riders-management/add-rider/legal-licensing" element={<LegalLicensing />} />
                 <Route path="/riders-management/add-rider/document-upload" element={<DocumentUpload />} />
-                <Route path="/settings/security" element={<Security />} />
+                <Route path="/settings" element={<Navigate to="/settings/profile" replace />} />
+                <Route path="/settings/profile" element={<Profile />} />
+                <Route path="/settings/alerts" element={<NotificationSettings />} />
                 <Route path="/finance-reports" element={<FinanceReports />} />
                 <Route path="/finance-reports/all-transactions" element={<AllTransactions />} />
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
