@@ -33,6 +33,7 @@ import RiderReview from "../pages/admin/UserManagement/Riders/review/RiderReview
 import RiderDetails from "../pages/admin/UserManagement/Riders/details/RiderDetails";
 import AdminOrderManagement from "../pages/admin/OrderManagement/AdminOrderManagement";
 import AdminOrderDetails from "../pages/admin/OrderManagement/details/AdminOrderDetails";
+import AdminNotifications from "../pages/admin/Notifcations/AdminNotifications";
 
 const AppRoutes = () => {
   return (
@@ -83,7 +84,14 @@ const AppRoutes = () => {
                   path="/user-management/riders/:riderId/review"
                   element={<AdminSwitch admin={<RiderReview />} fallback={<Navigate to="/riders-management" replace />} />}
                 />
-                <Route path="/notifications" element={<Notifications />} />
+                <Route
+                  path="/notifications"
+                  element={<AdminSwitch admin={<AdminNotifications />} fallback={<Notifications />} />}
+                />
+                <Route
+                  path="/admin/notifications"
+                  element={<AdminSwitch admin={<AdminNotifications />} fallback={<Navigate to="/notifications" replace />} />}
+                />
                 
                 {/* Order Management - Admin gets full order dashboard/details, Non-admin gets track-orders & order-list */}
                 <Route

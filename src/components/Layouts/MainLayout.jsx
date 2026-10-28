@@ -407,7 +407,12 @@ const MainLayout = () => {
                 <Settings size={20} className="text-gray-600" />
               </button>
 
-              <button className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors relative">
+              <button
+                type="button"
+                onClick={() => navigate("/notifications")}
+                aria-label="View notifications"
+                className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors relative cursor-pointer"
+              >
                 <Bell size={20} className="text-gray-600" />
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
               </button>

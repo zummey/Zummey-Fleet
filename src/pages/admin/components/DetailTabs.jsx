@@ -4,7 +4,17 @@ import React, { useRef } from "react";
  * Underline-style tabs for admin details pages (WAI-ARIA tabs pattern).
  * idPrefix: tab ids are `${idPrefix}-tab-${id}`; the panel should use `${idPrefix}-panel-${id}`.
  */
-const DetailTabs = ({ tabs, activeTab, onChange, label = "Details", idPrefix = "detail" }) => {
+const DetailTabs = ({
+  tabs,
+  activeTab,
+  onChange,
+  label = "Details",
+  idPrefix = "detail",
+  containerClassName = "no-scrollbar flex gap-8 overflow-x-auto",
+  showBadgeOnlyActive = false,
+  activeTabClassName = "font-semibold text-[#1E2E48]",
+  inactiveTabClassName = "font-normal text-gray-500 hover:text-[#1E2E48]",
+}) => {
   const tabRefs = useRef({});
 
   const handleKeyDown = (e, index) => {
@@ -21,9 +31,14 @@ const DetailTabs = ({ tabs, activeTab, onChange, label = "Details", idPrefix = "
   };
 
   return (
-    <div role="tablist" aria-label={label} className="no-scrollbar flex gap-8 overflow-x-auto">
+    <div role="tablist" aria-label={label} className={containerClassName}>
       {tabs.map((tab, index) => {
         const isActive = tab.id === activeTab;
+        const showBadge =
+          tab.badge !== undefined &&
+          tab.badge !== null &&
+          (!showBadgeOnlyActive || isActive);
+
         return (
           <button
             key={tab.id}
@@ -36,13 +51,22 @@ const DetailTabs = ({ tabs, activeTab, onChange, label = "Details", idPrefix = "
             tabIndex={isActive ? 0 : -1}
             onClick={() => onChange(tab.id)}
             onKeyDown={(e) => handleKeyDown(e, index)}
-            className={`relative shrink-0 pb-2 text-sm whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 ${
-              isActive ? "font-medium text-[#343C6A]" : "text-gray-500 hover:text-[#343C6A]"
+            className={`relative inline-flex items-center gap-2 shrink-0 pb-2 text-sm whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 ${
+              isActive ? activeTabClassName : inactiveTabClassName
             }`}
           >
-            {tab.label}
+            <span>{tab.label}</span>
+            {showBadge && (
+              <span
+                className={`inline-flex items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold ${
+                  tab.badgeClassName || "bg-[#FEECEB] text-[#EB4827]"
+                }`}
+              >
+                {tab.badge}
+              </span>
+            )}
             <span
-              className={`absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-[#EB4827] transition-transform duration-200 ${
+              className={`absolute inset-x-0 bottom-0 h-[2.5px] rounded-full bg-[#EB4827] transition-transform duration-200 ${
                 isActive ? "scale-x-100" : "scale-x-0"
               }`}
             />
