@@ -976,3 +976,154 @@ export const getRiderProfileExtras = async (riderId) => {
 };
 
 
+
+// ---------------------------------------------------------------------------
+// Dispatch management (admin)
+// TODO: Replace mocks with real endpoints once the backend is ready, e.g.
+//   getDispatchOverview     -> api.get("/admin/dispatch/overview/")
+//   getUnassignedOrders     -> api.get("/admin/dispatch/orders/", { params: { page, page_size } })
+//   getAvailableRiders      -> api.get("/admin/dispatch/riders/available/", { params: { limit } })
+//   getFleetAvailability    -> api.get("/admin/dispatch/fleets/availability/")
+//   getDispatchOrder        -> api.get(`/admin/dispatch/orders/${orderId}/`)
+//   getDispatchSuggestions  -> api.get(`/admin/dispatch/orders/${orderId}/suggestions/`, { params: { kind } })
+//   searchDispatchCandidates-> api.get(`/admin/dispatch/orders/${orderId}/candidates/`, { params: { kind, search } })
+//   assignOrder             -> api.post(`/admin/dispatch/orders/${orderId}/assign/`, payload)
+// Candidates: { id, kind: "rider" | "fleet", name, subtitle, fleet?, distanceKm, etaMinutes, rating, freeRiders? }
+// ---------------------------------------------------------------------------
+
+const DISPATCH_FLEETS = [
+  { id: "fl-1", name: "Swift Dispatch", freeRiders: 9, totalRiders: 24 },
+  { id: "fl-2", name: "Lagos Express", freeRiders: 6, totalRiders: 18 },
+  { id: "fl-3", name: "Island Couriers", freeRiders: 3, totalRiders: 15 },
+  { id: "fl-4", name: "Metro Riders", freeRiders: 4, totalRiders: 15 },
+  { id: "fl-5", name: "Quick Move", freeRiders: 0, totalRiders: 12 },
+];
+
+const DISPATCH_RIDERS = [
+  ["Emeka Nwankwo", "fl-1", 4.9],
+  ["Amara Okafor", "fl-2", 4.8],
+  ["Tunde Balogun", "fl-3", 4.7],
+  ["Chidi Eze", "fl-4", 4.6],
+  ["Bisi Adebayo", "fl-5", 4.5],
+  ["John Israel", null, 4.4],
+  ["Salem Mike", "fl-1", 4.8],
+  ["Emeka John", "fl-1", 4.6],
+  ["Ngozi Usman", "fl-2", 4.7],
+  ["Ibrahim Bello", null, 4.3],
+  ["Kemi Adeyemi", "fl-4", 4.9],
+  ["Osas Igbinedion", "fl-3", 4.5],
+].map(([name, fleetId, rating], i) => ({
+  id: `rd-${i + 1}`,
+  name,
+  fleetId,
+  fleet: DISPATCH_FLEETS.find((f) => f.id === fleetId)?.name ?? "Independent",
+  rating,
+}));
+
+const PACKAGES = ["Documents", "Food", "Electronics", "Parcel", "Clothing"];
+const DISPATCH_ADDRESSES = [
+  ["88 Sapele Road", "35 Ikpoba Slope", 6.2],
+  ["12 Airport Road", "4 Uselu Market Rd", 4.8],
+  ["7 Ring Road", "21 Ugbowo Lagos Rd", 5.5],
+  ["40 Ekenwan Road", "9 New Benin Rd", 3.9],
+  ["3 Akpakpava St", "18 Siluko Rd", 2.7],
+];
+
+let MOCK_UNASSIGNED = Array.from({ length: 8 }, (_, i) => {
+  const [pickup, dropoff, distanceKm] = DISPATCH_ADDRESSES[i % DISPATCH_ADDRESSES.length];
+  return {
+    id: `ORD-${48211 + i}`,
+    customer: `${FIRST_NAMES[i % FIRST_NAMES.length]} ${LAST_NAMES[(i + 3) % LAST_NAMES.length]}`,
+    pickup,
+    dropoff,
+    distanceKm,
+    package: PACKAGES[i % PACKAGES.length],
+    priority: i % 3 === 0 ? "urgent" : "pending",
+  };
+});
+
+const findUnassigned = (orderId) => MOCK_UNASSIGNED.find((o) => o.id === orderId);
+
+// Deterministic per-order ranking so each order always shows the same suggestions
+const riderCandidatesFor = (order) => {
+  const seed = Number(order.id.replace(/\D/g, "")) || 0;
+  return DISPATCH_RIDERS.filter((r) => DISPATCH_FLEETS.find((f) => f.id === r.fleetId)?.freeRiders !== 0)
+    .map((rider, i) => {
+      const distanceKm = Number((1.4 + ((i * 7 + seed) % 12) * 0.35).toFixed(1));
+      return {
+        id: rider.id,
+        kind: "rider",
+        name: rider.name,
+        fleet: rider.fleet,
+        rating: rider.rating,
+        distanceKm,
+        etaMinutes: Math.round(30 + distanceKm * 3 + order.distanceKm),
+      };
+    })
+    .sort((a, b) => a.etaMinutes - b.etaMinutes);
+};
+
+const fleetCandidatesFor = (order) =>
+  DISPATCH_FLEETS.filter((f) => f.freeRiders > 0)
+    .map((fleet, i) => {
+      const distanceKm = Number((1.8 + i * 0.6).toFixed(1));
+      return {
+        id: fleet.id,
+        kind: "fleet",
+        name: fleet.name,
+        freeRiders: fleet.freeRiders,
+        rating: Number((4.8 - i * 0.1).toFixed(1)),
+        distanceKm,
+        etaMinutes: Math.round(34 + distanceKm * 3 + order.distanceKm),
+      };
+    })
+    .sort((a, b) => a.etaMinutes - b.etaMinutes);
+
+const candidatesFor = (order, kind) => (kind === "fleet" ? fleetCandidatesFor(order) : riderCandidatesFor(order));
+
+const withOrder = (orderId, fn) => {
+  const order = findUnassigned(orderId);
+  return order ? fn(order) : Promise.reject(new Error(`Order ${orderId} is not waiting for dispatch`));
+};
+
+export const getDispatchOverview = () => {
+  const totalRiders = DISPATCH_FLEETS.reduce((sum, f) => sum + f.totalRiders, 0) + 2; // + independents
+  const freeRiders = DISPATCH_RIDERS.length;
+  const fleetsWithFree = DISPATCH_FLEETS.filter((f) => f.freeRiders > 0).length;
+  return delay({
+    unassignedOrders: { value: MOCK_UNASSIGNED.length },
+    availableRiders: { value: freeRiders, caption: `of ${totalRiders}` },
+    fleetAvailability: {
+      value: Math.round((fleetsWithFree / DISPATCH_FLEETS.length) * 100),
+      caption: `${fleetsWithFree} of ${DISPATCH_FLEETS.length} fleets have free riders`,
+    },
+  });
+};
+
+export const getUnassignedOrders = ({ page = 1, pageSize = 10 } = {}) =>
+  delay(paginate(MOCK_UNASSIGNED, MOCK_UNASSIGNED, page, pageSize));
+
+export const getAvailableRiders = ({ limit = 4 } = {}) =>
+  delay({ results: DISPATCH_RIDERS.slice(5, 5 + limit), count: DISPATCH_RIDERS.length });
+
+export const getFleetAvailability = () => delay(DISPATCH_FLEETS.map((f) => ({ ...f })));
+
+export const getDispatchOrder = (orderId) => withOrder(orderId, (order) => delay({ ...order }, 400));
+
+export const getDispatchSuggestions = (orderId, kind = "rider") =>
+  withOrder(orderId, (order) => delay(candidatesFor(order, kind).slice(0, 5), 400));
+
+// Everyone free for this order (manual assignment), filtered by name / fleet
+export const searchDispatchCandidates = (orderId, { kind = "rider", search = "" } = {}) =>
+  withOrder(orderId, (order) =>
+    delay(candidatesFor(order, kind).filter((c) => matchesSearch(c, ["name", "fleet"], search)), 300)
+  );
+
+// mode: "suggested" | "manual"; reason/note only for manual assignments
+export const assignOrder = ({ orderId, kind, candidateId, mode = "suggested", reason, note = "" }) =>
+  withOrder(orderId, (order) => {
+    const candidate = candidatesFor(order, kind).find((c) => c.id === candidateId);
+    if (!candidate) return Promise.reject(new Error("That rider or fleet is no longer available"));
+    MOCK_UNASSIGNED = MOCK_UNASSIGNED.filter((o) => o.id !== orderId);
+    return delay({ orderId, kind, assignee: candidate, mode, reason, note, assignedAt: new Date().toISOString() }, 700);
+  });

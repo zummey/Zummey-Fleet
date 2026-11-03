@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
+  assignOrder,
   deleteCustomer,
   reviewRefund,
   submitFleetReview,
@@ -133,6 +134,33 @@ export const useReviewRefund = () => {
     },
     onError: (error) => {
       console.error("❌ Failed to review refund:", error.response?.data || error.message);
+    },
+  });
+};
+
+/**
+ * ASSIGN AN ORDER TO A RIDER OR FLEET
+ * Used in: pages/admin/Dispatch/assign/AssignOrder.jsx (suggested + manual assignment)
+ * Payload: { orderId, kind: "rider" | "fleet", candidateId, mode: "suggested" | "manual", reason?, note? }
+ */
+export const useAssignOrder = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: ["admin", "assignOrder"],
+    mutationFn: assignOrder,
+    onSuccess: (_data, { orderId }) => {
+      // Mark the order stale without refetching it: the assign page is still mounted and
+      // the order is no longer "waiting for dispatch", so a refetch would flash an error.
+      queryClient.invalidateQueries({ queryKey: ["admin", "dispatch", "order", orderId], refetchType: "none" });
+      ["overview", "orders", "riders", "fleets"].forEach((key) =>
+        queryClient.invalidateQueries({ queryKey: ["admin", "dispatch", key] })
+      );
+      queryClient.invalidateQueries({ queryKey: ["admin", "orders"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "dashboard"] });
+    },
+    onError: (error) => {
+      console.error("❌ Failed to assign order:", error.response?.data || error.message);
     },
   });
 };

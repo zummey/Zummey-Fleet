@@ -20,6 +20,7 @@ import {
   ChevronRight,
   LogOut,
   UserCog,
+  Route as DispatchIcon,
 } from "lucide-react";
 
 const MainLayout = () => {
@@ -81,6 +82,10 @@ const MainLayout = () => {
           { path: "/order-management/order-list", label: "Order List" },
         ],
       },
+    // Dispatch is admin-only for now
+    ...(isAdmin
+      ? [{ path: "/dispatch-management", icon: DispatchIcon, label: "Dispatch Management" }]
+      : []),
     {
       path: "/finance-reports",
       icon: CreditCard,
