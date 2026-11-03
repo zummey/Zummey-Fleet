@@ -11,6 +11,11 @@ import {
   getCustomerOrders,
   getCustomerComplaints,
   getCustomerPayments,
+  getAdminRiders,
+  getRiderDetails,
+  getRiderDeliveries,
+  getRiderPerformance,
+  getRiderIncidents,
   getFinanceOverview,
   getRevenueSeries,
   getTransactions,
@@ -123,6 +128,72 @@ export const useCustomerHistory = (customerId, kind, { page, pageSize, search })
     queryKey: ["admin", "customers", "detail", customerId, kind, { page, pageSize, search }],
     queryFn: () => CUSTOMER_HISTORY_FETCHERS[kind](customerId, { page, pageSize, search }),
     enabled: !!customerId,
+    placeholderData: keepPreviousData,
+    staleTime: 2 * 60 * 1000,
+    retry: 2,
+  });
+};
+
+export const useAdminRiders = ({ page, pageSize, search, status, riderType, minDeliveries }) => {
+  return useQuery({
+    queryKey: ["admin", "riders", "list", { page, pageSize, search, status, riderType, minDeliveries }],
+    queryFn: () => getAdminRiders({ page, pageSize, search, status, riderType, minDeliveries }),
+    placeholderData: keepPreviousData,
+    staleTime: 2 * 60 * 1000,
+    retry: 2,
+  });
+};
+
+export const useAdminRiderCount = (
+  { search, status, riderType, minDeliveries },
+  { enabled = true } = {}
+) => {
+  return useQuery({
+    queryKey: ["admin", "riders", "count", { search, status, riderType, minDeliveries }],
+    queryFn: () => getAdminRiders({ page: 1, pageSize: 1, search, status, riderType, minDeliveries }),
+    select: (data) => data.count,
+    enabled,
+    placeholderData: keepPreviousData,
+    staleTime: 2 * 60 * 1000,
+  });
+};
+
+export const useAdminRiderDetails = (riderId) => {
+  return useQuery({
+    queryKey: ["admin", "riders", "detail", riderId],
+    queryFn: () => getRiderDetails(riderId),
+    enabled: !!riderId,
+    staleTime: 2 * 60 * 1000,
+    retry: 1,
+  });
+};
+
+export const useRiderDeliveries = (riderId, { page, pageSize, search } = {}) => {
+  return useQuery({
+    queryKey: ["admin", "riders", "deliveries", riderId, { page, pageSize, search }],
+    queryFn: () => getRiderDeliveries(riderId, { page, pageSize, search }),
+    enabled: !!riderId,
+    placeholderData: keepPreviousData,
+    staleTime: 2 * 60 * 1000,
+    retry: 2,
+  });
+};
+
+export const useRiderPerformance = (riderId) => {
+  return useQuery({
+    queryKey: ["admin", "riders", "performance", riderId],
+    queryFn: () => getRiderPerformance(riderId),
+    enabled: !!riderId,
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+  });
+};
+
+export const useRiderIncidents = (riderId, { page, pageSize } = {}) => {
+  return useQuery({
+    queryKey: ["admin", "riders", "incidents", riderId, { page, pageSize }],
+    queryFn: () => getRiderIncidents(riderId, { page, pageSize }),
+    enabled: !!riderId,
     placeholderData: keepPreviousData,
     staleTime: 2 * 60 * 1000,
     retry: 2,

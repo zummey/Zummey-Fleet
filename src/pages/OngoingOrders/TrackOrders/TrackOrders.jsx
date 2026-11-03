@@ -130,7 +130,7 @@ const TrackOrders = () => {
               </div>
             </div>
           </div>
-          ;
+          
           <div className="flex-1 overflow-y-auto p-6 space-y-4">
             {filteredOrders.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center py-12">

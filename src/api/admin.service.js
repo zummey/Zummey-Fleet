@@ -566,3 +566,413 @@ export const reviewRefund = ({ refundId, decision, reason, message = "" }) => {
   }
   return delay({ id: refund.id, status: refund.status }, 600);
 };
+// ---------------------------------------------------------------------------
+// User management: riders (admin)
+// Supports search, status, riderType, and minDeliveries filtering.
+// Falls back seamlessly to mock riders if backend API is unavailable/empty.
+// ---------------------------------------------------------------------------
+
+const RIDER_FIRST_NAMES = [
+  "Musa",
+  "Emeka",
+  "Babatunde",
+  "Chinedu",
+  "Ibrahim",
+  "Taye",
+  "Osaze",
+  "Femi",
+  "Suleiman",
+  "Victor",
+  "Amina",
+  "Kemi",
+];
+
+const RIDER_LAST_NAMES = [
+  "Bello",
+  "Okafor",
+  "Adeyemi",
+  "Eze",
+  "Aliyu",
+  "Taiwo",
+  "Omoregie",
+  "Balogun",
+  "Abubakar",
+  "Idowu",
+  "Nwachukwu",
+  "Sanusi",
+];
+
+const RIDER_STATUSES = ["active", "online", "active", "offline", "active", "pending", "suspended"];
+const RIDER_FLEETS = [
+  "Swift Parcel Ltd",
+  "Edo Express Logistics",
+  "RapidRide Couriers",
+  "Benin Dispatch Co.",
+  null,
+  "GreenLane Movers",
+];
+
+export const MOCK_ADMIN_RIDERS = Array.from({ length: 54 }, (_, i) => {
+  const first = RIDER_FIRST_NAMES[i % RIDER_FIRST_NAMES.length];
+  const last = RIDER_LAST_NAMES[(i * 3) % RIDER_LAST_NAMES.length];
+  const fleet = RIDER_FLEETS[i % RIDER_FLEETS.length];
+  const joined = new Date(2026, 4, 10);
+  joined.setDate(joined.getDate() + i * 3);
+  return {
+    id: String(8010 + i),
+    code: `ZRD-${8010 + i}`,
+    firstName: first,
+    lastName: last,
+    name: `${first} ${last}`,
+    phone: `0803456${String(1200 + i).padStart(4, "0")}`,
+    email: `${first}.${last}${i}@zummeyrider.com`.toLowerCase(),
+    riderType: fleet ? "Fleet Rider" : "Independent",
+    fleet: fleet ?? "Independent",
+    status: RIDER_STATUSES[i % RIDER_STATUSES.length],
+    rating: Number((4.1 + ((i * 7) % 10) * 0.1).toFixed(1)),
+    deliveriesCompleted: 12 + ((i * 19) % 220),
+    dateJoined: joined.toISOString().slice(0, 10),
+    profile_picture_url: null,
+  };
+});
+
+const normalizeApiRider = (r, i) => {
+  const firstName = r.first_name || r.firstName || r.user?.first_name || "";
+  const lastName = r.last_name || r.lastName || r.user?.last_name || "";
+  const name = `${firstName} ${lastName}`.trim() || r.name || `Rider ${i + 1}`;
+  const fleet = r.fleet?.name || r.fleet || null;
+  return {
+    id: String(r.id || r.profile_id || 8010 + i),
+    code: `ZRD-${r.id || r.profile_id || 8010 + i}`,
+    firstName,
+    lastName,
+    name,
+    phone: r.user_phone || r.phoneNumber || r.phone_number || r.user?.phone_number || "—",
+    email: r.user_email || r.email || r.user?.email || "—",
+    riderType: fleet ? "Fleet Rider" : (r.riderType || "Independent"),
+    fleet: fleet ?? "Independent",
+    status: r.is_online === true ? "online" : r.is_online === false ? "offline" : (r.status || "active").toLowerCase(),
+    rating: r.rating ? Number(r.rating) : Number((4.2 + (i % 8) * 0.1).toFixed(1)),
+    deliveriesCompleted: r.total_deliveries ?? r.deliveriesCompleted ?? (10 + ((i * 7) % 50)),
+    dateJoined: r.created_at?.slice(0, 10) || r.date_joined?.slice(0, 10) || "2026-05-10",
+    profile_picture_url: r.profile_picture_url || r.image || null,
+  };
+};
+
+export const fetchAllAdminRiders = async () => {
+  try {
+    const { fetchRiders } = await import("./authRiders");
+    const response = await fetchRiders();
+    const list = Array.isArray(response?.data?.responseDetails?.results)
+      ? response.data.responseDetails.results
+      : Array.isArray(response?.data?.results)
+        ? response.data.results
+        : Array.isArray(response?.data)
+          ? response.data
+          : [];
+    if (list.length > 0) {
+      return list.map(normalizeApiRider);
+    }
+  } catch (_) {
+    // Backend endpoint not active or returned error — fallback to mock
+  }
+  return MOCK_ADMIN_RIDERS;
+};
+
+const filterRiderList = (riders, { search = "", status = "all", riderType = "all", minDeliveries = 0 } = {}) => {
+  const term = search.trim().toLowerCase();
+  return riders.filter((r) => {
+    if (status !== "all" && r.status.toLowerCase() !== status.toLowerCase()) return false;
+    if (riderType !== "all" && r.riderType.toLowerCase() !== riderType.toLowerCase()) return false;
+    if (r.deliveriesCompleted < minDeliveries) return false;
+    if (term) {
+      const match = [r.name, r.code, r.phone, r.email, r.fleet, r.riderType].some((v) =>
+        String(v ?? "").toLowerCase().includes(term)
+      );
+      if (!match) return false;
+    }
+    return true;
+  });
+};
+
+export const getAdminRiders = async ({
+  page = 1,
+  pageSize = 10,
+  search = "",
+  status = "all",
+  riderType = "all",
+  minDeliveries = 0,
+} = {}) => {
+  const allRiders = await fetchAllAdminRiders();
+  const matches = filterRiderList(allRiders, { search, status, riderType, minDeliveries });
+  const start = (page - 1) * pageSize;
+  return delay({
+    results: matches.slice(start, start + pageSize),
+    count: matches.length,
+    totalPages: Math.max(1, Math.ceil(matches.length / pageSize)),
+  });
+};
+
+export const exportAdminRiders = async ({
+  search = "",
+  status = "all",
+  riderType = "all",
+  minDeliveries = 0,
+} = {}) => {
+  const allRiders = await fetchAllAdminRiders();
+  return delay(filterRiderList(allRiders, { search, status, riderType, minDeliveries }), 400);
+};
+
+export const getRiderDetails = async (id) => {
+  const allRiders = await fetchAllAdminRiders();
+  const rider = allRiders.find((r) => String(r.id) === String(id)) || allRiders[0];
+  if (!rider) return Promise.reject(new Error("Rider not found"));
+
+  const seed = Number(rider.id) || 8010;
+
+  return delay({
+    ...rider,
+    code: rider.code || `ZFL - ${rider.id}`,
+    fleetName: rider.fleet && rider.fleet !== "Independent" ? rider.fleet : "Falcon Fleet",
+    // Profile extras
+    gender: "Male",
+    dob: "14 Mar 2000",
+    address: "22 Airport Road ,Benin City",
+    emergencyContact: `090456${String(7890 + seed).slice(-4)}`,
+    nin: `5439${String(seed * 1234).slice(0, 8)}`,
+    // Vehicle details
+    vehicleType: "Motorbike",
+    vehicleMakeModel: "Suzuki",
+    vehicleYear: "2022",
+    vehiclePlate: `BEN -946XY`,
+    vehicleColor: "Black",
+    gpsTrackerSn: `GPS${64000 + (seed % 1000)}`,
+    insuranceExpiry: "2026-12-18",
+    roadWorthiness: "Valid till Sep 2026",
+    appliedDate: rider.appliedDate || "Applied Oct 12, 2026",
+    documents: [
+      {
+        id: "drivers_license",
+        title: "Drivers License",
+        category: "license",
+        uploadedAt: "Uploaded Oct 8 , 2026",
+        status: "verified",
+        mimeType: "image/png",
+        url: CertificateImage,
+      },
+      {
+        id: "passport_photo",
+        title: "Passport Photograph",
+        category: "identity",
+        uploadedAt: "Uploaded Oct 8 , 2026",
+        status: "verified",
+        mimeType: "image/png",
+        url: CertificateImage,
+      },
+      {
+        id: "government_id",
+        title: "Government ID (NIN)",
+        category: "identity",
+        uploadedAt: "Uploaded Oct 8 , 2026",
+        status: "verified",
+        mimeType: "image/png",
+        url: CertificateImage,
+      },
+      {
+        id: "vehicle_reg",
+        title: "Vehicle Registration",
+        category: "license",
+        uploadedAt: "Uploaded Oct 8 , 2026",
+        status: "verified",
+        mimeType: "image/png",
+        url: CertificateImage,
+      },
+    ],
+    lastReview: rider.lastReview ?? null,
+  });
+};
+
+const RIDER_REVIEW_STATUS = {
+  approve: "active",
+  reject: "rejected",
+  clarify: "clarification",
+};
+
+export const submitRiderReview = async ({
+  riderId,
+  decision,
+  note = "",
+  itemsNeeded = [],
+  reason = "",
+}) => {
+  const allRiders = await fetchAllAdminRiders();
+  const rider = allRiders.find((r) => String(r.id) === String(riderId)) || allRiders[0];
+  if (!rider) return Promise.reject(new Error("Rider not found"));
+
+  rider.status = RIDER_REVIEW_STATUS[decision] || rider.status;
+  rider.lastReview = {
+    decision,
+    note,
+    itemsNeeded,
+    reason,
+    reviewedAt: new Date().toISOString(),
+  };
+
+  return delay({ riderId: rider.id, status: rider.status, review: rider.lastReview }, 600);
+};
+
+// ---------------------------------------------------------------------------
+// Rider details sub-resources: profile extras, deliveries, performance, incidents
+// ---------------------------------------------------------------------------
+
+const DELIVERY_PLACES = ["Ring Road", "New Benin", "Ugbowo", "Sapele Road", "Airport Road", "Uselu", "Ekenwan Road"];
+const DELIVERY_STATUSES = ["delivered", "delivered", "delivered", "in_transit", "cancelled", "delivered"];
+
+const riderDeliveryHistory = (riderId) => {
+  const seed = Number(riderId) || 8010;
+  return Array.from({ length: 30 }, (_, i) => {
+    const d = new Date(2026, 5, 1);
+    d.setDate(d.getDate() + i * 2);
+    return {
+      id: `GHS${String(seed * 3 + i * 11).padStart(5, "0")}HG`,
+      pickup: DELIVERY_PLACES[(seed + i) % DELIVERY_PLACES.length],
+      destination: DELIVERY_PLACES[(seed + i * 3 + 1) % DELIVERY_PLACES.length],
+      amount: `${(2500 + ((seed + i * 37) % 12) * 250).toLocaleString()}`,
+      status: DELIVERY_STATUSES[(seed + i) % DELIVERY_STATUSES.length],
+      date: d.toISOString().slice(0, 10),
+    };
+  });
+};
+
+export const getRiderDeliveries = async (riderId, { page = 1, pageSize = 10, search = "" } = {}) => {
+  const all = riderDeliveryHistory(riderId);
+  const term = search.trim().toLowerCase();
+  const matches = term
+    ? all.filter((r) =>
+        [r.id, r.pickup, r.destination, r.status].some((v) =>
+          String(v ?? "").toLowerCase().includes(term)
+        )
+      )
+    : all;
+  const start = (page - 1) * pageSize;
+  return delay({
+    results: matches.slice(start, start + pageSize),
+    count: matches.length,
+    total: all.length,
+    totalPages: Math.max(1, Math.ceil(matches.length / pageSize)),
+  });
+};
+
+export const getRiderPerformance = async (riderId) => {
+  const seed = Number(riderId) || 8010;
+  return delay({
+    averageRating: Number((4.2 + (seed % 8) * 0.1).toFixed(1)),
+    completedDeliveries: 80 + (seed % 40),
+    cancellationRate: 88 + (seed % 10),
+    avgDeliveryTime: 20 + (seed % 15),
+  });
+};
+
+const INCIDENT_TITLES = ["Customer Complaint", "Late Delivery", "Package Damage", "Misconduct"];
+const INCIDENT_STATUSES = [
+  { status: "under_review", statusLabel: "Under Review" },
+  { status: "resolved", statusLabel: "Resolved" },
+  { status: "open", statusLabel: "Open" },
+];
+
+const riderIncidentHistory = (riderId) => {
+  const seed = Number(riderId) || 8010;
+  const count = 2 + (seed % 4);
+  return Array.from({ length: count }, (_, i) => {
+    const st = INCIDENT_STATUSES[(seed + i) % INCIDENT_STATUSES.length];
+    const d = new Date(2026, 9, 6);
+    d.setDate(d.getDate() - i * 5);
+    return {
+      id: String(3100 + seed + i),
+      incidentId: `INC-${3100 + (seed % 100) + i}`,
+      title: INCIDENT_TITLES[(seed + i) % INCIDENT_TITLES.length],
+      description: "Customer Reported a rude interaction at drop-off",
+      category: "Conduct",
+      severity: i === 0 ? "Moderate" : "Low",
+      ...st,
+      date: d.toISOString().slice(0, 10),
+      riderName: `Emeka Nwankwo (RDR-2041)`,
+      dateReported: "Oct 6, 2026",
+      reportedBy: "Customer",
+      relatedDelivery: `DLV-${88150 + i}`,
+      actionTaken:
+        "Rider contacted by support. Awaiting a written statement within 48 hours.",
+      resolutionNotes:
+        "Decision on a formal warning is pending the rider statement.",
+      timeline: [
+        {
+          label: "Incident reported by customer",
+          timestamp: "Oct 6, 2026 - 09:14",
+          state: "done",
+        },
+        {
+          label: "Support review started",
+          timestamp: "Oct 6, 2025 - 11:40",
+          state: "done",
+        },
+        {
+          label: "Awaiting rider statement",
+          timestamp: "In progress",
+          state: "in_progress",
+        },
+      ],
+      attachments: [
+        { name: "Customer complaint.pdf", url: "#" },
+        { name: "Call recording.mp3", url: "#" },
+      ],
+    };
+  });
+};
+
+export const getRiderIncidents = async (riderId, { page = 1, pageSize = 10 } = {}) => {
+  const all = riderIncidentHistory(riderId);
+  const start = (page - 1) * pageSize;
+  const underReview = all.filter((r) => r.status === "under_review").length;
+  return delay({
+    results: all.slice(start, start + pageSize),
+    count: all.length,
+    total: all.length,
+    totalPages: Math.max(1, Math.ceil(all.length / pageSize)),
+    summary: {
+      total: all.length,
+      underReview,
+      major: 92,
+      mostRecent: "Oct 6, 2026",
+    },
+  });
+};
+
+// Update rider status (approve / suspend / reactivate)
+export const updateRiderStatus = async ({ riderId, status }) => {
+  const allRiders = await fetchAllAdminRiders();
+  const rider = allRiders.find((r) => String(r.id) === String(riderId));
+  if (rider) rider.status = status;
+  return delay({ riderId, status }, 500);
+};
+
+// Rider profile extras (gender, DOB, address etc.) — augments getRiderDetails
+export const getRiderProfileExtras = async (riderId) => {
+  const seed = Number(riderId) || 8010;
+  return delay({
+    gender: "Male",
+    dob: "14 Mar 2000",
+    address: "22 Airport Road ,Benin City",
+    emergencyContact: `090456${String(7890 + seed).slice(-4)}`,
+    nin: `5439${String(seed * 1234).slice(0, 8)}`,
+    vehicleType: "Motorbike",
+    vehicleMakeModel: "Suzuki",
+    vehicleYear: "2022",
+    vehiclePlate: `BEN -946XY`,
+    vehicleColor: "Black",
+    gpsTrackerSn: `GPS${64000 + (seed % 1000)}`,
+    insuranceExpiry: "2026-12-18",
+    roadWorthiness: "Valid till Sep 2026",
+  });
+};
+
+
