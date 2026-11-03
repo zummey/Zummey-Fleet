@@ -346,6 +346,227 @@ export const deleteCustomer = ({ customerId }) =>
   });
 
 // ---------------------------------------------------------------------------
+// Finance & Reports (admin)
+// TODO: Replace mocks with real endpoints once the backend is ready, e.g.
+//   getFinanceOverview -> api.get("/admin/finance/overview/")
+//   getRevenueSeries   -> api.get("/admin/finance/revenue/", { params: { range } })   range: 7d | 30d | 12m
+//   getTransactions    -> api.get("/admin/finance/transactions/", { params: { page, page_size, search, type, status } })
+//   getPayouts         -> api.get("/admin/finance/payouts/", { params: { page, page_size } })
+//   updatePayout       -> api.post(`/admin/finance/payouts/${id}/${action}/`, { reason, note })   action: approve | hold | release
+//   getRefunds         -> api.get("/admin/finance/refunds/", { params: { page, page_size } })
+//   reviewRefund       -> api.post(`/admin/finance/refunds/${id}/${decision}/`, { reason, message }) decision: approve | reject
+// List responses: { results, count, totalPages }
+// ---------------------------------------------------------------------------
+
+const PEOPLE = ["Uche Kalu", "Emeka Nwankwo", "Peter Ojo", "Aisha Bello", "Joy John", "Ibrahim Musa", "Tolu Adeyemi", "Efe Omoregie"];
+const TRANSACTION_TYPES = ["order_payment", "order_payment", "withdrawal", "rider_payout", "order_payment", "fleet_settlement", "refund"];
+const TRANSACTION_STATUSES = ["completed", "completed", "completed", "processing", "completed", "failed", "completed"];
+const BANKS = ["Zenith Bank", "GTBank", "Access Bank", "First Bank", "UBA"];
+
+const hoursAgo = (n) => {
+  const d = new Date(2026, 9, 26, 10, 30);
+  d.setMinutes(d.getMinutes() - n * 97);
+  return d.toISOString();
+};
+
+const REFERENCE_PREFIX = {
+  order_payment: "ORD",
+  refund: "RFD",
+  rider_payout: "PYT",
+  fleet_settlement: "STL",
+  withdrawal: "WDR",
+};
+const METHOD_FOR_TYPE = {
+  order_payment: "Card",
+  refund: "Card",
+  rider_payout: "Bank transfer",
+  fleet_settlement: "Bank transfer",
+  withdrawal: "Bank transfer",
+};
+
+const MOCK_TRANSACTIONS = Array.from({ length: 78 }, (_, i) => {
+  const type = TRANSACTION_TYPES[i % TRANSACTION_TYPES.length];
+  const isSmall = type === "order_payment" || type === "refund";
+  return {
+    id: `TXN-${70114 - i}`,
+    type,
+    status: TRANSACTION_STATUSES[(i * 3) % TRANSACTION_STATUSES.length],
+    amount: isSmall ? 2500 + ((i * 37) % 16) * 250 : 20000 + ((i * 53) % 30) * 5000,
+    date: hoursAgo(i),
+    reference: `${REFERENCE_PREFIX[type]}-${48201 - i * 7}`,
+    party: type === "fleet_settlement" ? COMPANIES[i % COMPANIES.length][0] : PEOPLE[i % PEOPLE.length],
+    method: type === "order_payment" ? PAYMENT_METHODS[i % PAYMENT_METHODS.length] : METHOD_FOR_TYPE[type],
+  };
+});
+
+const filterTransactions = ({ search = "", type = "all", status = "any" } = {}) =>
+  MOCK_TRANSACTIONS.filter(
+    (t) =>
+      (type === "all" || t.type === type) &&
+      (status === "any" || t.status === status) &&
+      matchesSearch(t, ["id", "reference", "party", "method"], search)
+  );
+
+const listResponse = (matches, page = 1, pageSize = 10) => ({
+  results: matches.slice((page - 1) * pageSize, page * pageSize),
+  count: matches.length,
+  totalPages: Math.max(1, Math.ceil(matches.length / pageSize)),
+});
+
+export const getTransactions = ({ page, pageSize, search, type, status } = {}) =>
+  delay(listResponse(filterTransactions({ search, type, status }), page, pageSize));
+
+// Every transaction matching the given search/filters (none = all), for export
+export const exportTransactions = (filters) => delay(filterTransactions(filters), 400);
+
+// Releasing a payout or approving a refund records a transaction, like the backend would
+const recordTransaction = ({ type, amount, reference, party, method }) => {
+  const latest = Math.max(...MOCK_TRANSACTIONS.map((t) => Number(t.id.split("-")[1])));
+  MOCK_TRANSACTIONS.unshift({
+    id: `TXN-${latest + 1}`,
+    type,
+    status: "completed",
+    amount,
+    date: new Date().toISOString(),
+    reference,
+    party,
+    method,
+  });
+};
+
+export const getFinanceOverview = () =>
+  delay({
+    revenue: { value: 4_820_000, caption: "+8.6% vs yesterday" },
+    riderPayouts: { value: 1_490_000, caption: "+8.6% vs yesterday" },
+    fleetSettlements: { value: 3_162_000, caption: "+6.1% this month" },
+    refunds: { value: 86_500, caption: "2% vs last week" },
+  });
+
+const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+const MONTHLY_REVENUE = [540_000, 330_000, 590_000, 450_000, 220_000, 280_000, 320_000, 720_000, 480_000, 610_000, 680_000, 630_000];
+
+// Points: [{ label, amount }]
+export const getRevenueSeries = (range = "12m") => {
+  if (range === "12m") return delay(MONTHS.map((label, i) => ({ label, amount: MONTHLY_REVENUE[i] })));
+
+  const days = range === "7d" ? 7 : 30;
+  const end = new Date(2026, 9, 26);
+  return delay(
+    Array.from({ length: days }, (_, i) => {
+      const d = new Date(end);
+      d.setDate(end.getDate() - (days - 1 - i));
+      return {
+        label:
+          days === 7
+            ? d.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase()
+            : d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+        amount: 8_000 + ((i * 7919 + days * 31) % 23) * 1_100,
+      };
+    })
+  );
+};
+
+// Payouts. status: pending_approval -> approved -> released, with on_hold possible before release
+const PAYOUT_STATUSES = ["pending_approval", "approved", "on_hold", "released"];
+
+const MOCK_PAYOUTS = Array.from({ length: 26 }, (_, i) => {
+  const isFleet = i % 5 === 4;
+  const status = PAYOUT_STATUSES[i % PAYOUT_STATUSES.length];
+  return {
+    id: `PYT-${5120 + i}`,
+    recipientType: isFleet ? "fleet" : "rider",
+    recipient: {
+      name: isFleet ? COMPANIES[i % COMPANIES.length][0] : PEOPLE[i % PEOPLE.length],
+      code: isFleet ? `ZFL-${230 + i}` : `ZUM-${10102 + i}`,
+    },
+    deliveries: 40 + ((i * 17) % 60),
+    amount: 30_000 + ((i * 41) % 40) * 450,
+    status,
+    bank: { name: BANKS[i % BANKS.length], last4: String(1096 + i * 37).slice(-4) },
+    paidAt: status === "released" ? daysAgo(i % 9) : null,
+    hold: status === "on_hold" ? { reason: "bank_verification", note: "" } : null,
+  };
+});
+
+// Which statuses each action may be applied from (rejects stale actions, e.g. two admins at once)
+const PAYOUT_TRANSITIONS = {
+  approve: { from: ["pending_approval"], to: "approved" },
+  hold: { from: ["pending_approval", "approved"], to: "on_hold" },
+  release: { from: ["approved", "on_hold"], to: "released" },
+};
+
+export const getPayouts = ({ page, pageSize } = {}) => delay(listResponse(MOCK_PAYOUTS, page, pageSize));
+
+export const updatePayout = ({ payoutId, action, reason, note = "" }) => {
+  const payout = MOCK_PAYOUTS.find((p) => p.id === payoutId);
+  const transition = PAYOUT_TRANSITIONS[action];
+  if (!payout) return Promise.reject(new Error("Payout not found"));
+  if (!transition) return Promise.reject(new Error(`Unknown payout action "${action}"`));
+  if (!transition.from.includes(payout.status)) {
+    return Promise.reject(new Error("This payout has already been updated. Refresh to see its latest status."));
+  }
+
+  payout.status = transition.to;
+  if (action === "hold") payout.hold = { reason, note, heldAt: new Date().toISOString() };
+  if (action === "release") {
+    payout.paidAt = new Date().toISOString();
+    payout.hold = null;
+    recordTransaction({
+      type: payout.recipientType === "fleet" ? "fleet_settlement" : "rider_payout",
+      amount: payout.amount,
+      reference: payout.id,
+      party: payout.recipient.name,
+      method: "Bank transfer",
+    });
+  }
+  return delay({ id: payout.id, status: payout.status }, 600);
+};
+
+// Refunds. status: pending_approval -> approved | rejected
+const REFUND_REASONS = ["Failed Delivery", "Damaged Item", "Late Delivery", "Wrong Item", "Failed Delivery"];
+const REFUND_STATUSES = ["pending_approval", "approved", "rejected", "pending_approval"];
+
+const MOCK_REFUNDS = Array.from({ length: 22 }, (_, i) => {
+  const status = REFUND_STATUSES[i % REFUND_STATUSES.length];
+  return {
+    id: `RFD-${3301 + i}`,
+    orderId: `ORD-${48205 - i * 3}`,
+    requestedAt: daysAgo(5 + i),
+    customer: PEOPLE[(i + 4) % PEOPLE.length],
+    reason: REFUND_REASONS[i % REFUND_REASONS.length],
+    amount: 3_000 + ((i * 29) % 12) * 250,
+    method: PAYMENT_METHODS[i % PAYMENT_METHODS.length],
+    status,
+    decidedAt: status === "pending_approval" ? null : daysAgo(4 + i),
+    decision: null,
+  };
+});
+
+export const getRefunds = ({ page, pageSize } = {}) => delay(listResponse(MOCK_REFUNDS, page, pageSize));
+
+export const reviewRefund = ({ refundId, decision, reason, message = "" }) => {
+  const refund = MOCK_REFUNDS.find((r) => r.id === refundId);
+  if (!refund) return Promise.reject(new Error("Refund not found"));
+  if (!["approve", "reject"].includes(decision)) return Promise.reject(new Error(`Unknown decision "${decision}"`));
+  if (refund.status !== "pending_approval") {
+    return Promise.reject(new Error("This refund has already been reviewed. Refresh to see its latest status."));
+  }
+
+  refund.status = decision === "approve" ? "approved" : "rejected";
+  refund.decidedAt = new Date().toISOString();
+  refund.decision = { reason, message };
+  if (decision === "approve") {
+    recordTransaction({
+      type: "refund",
+      amount: refund.amount,
+      reference: refund.id,
+      party: refund.customer,
+      method: refund.method,
+    });
+  }
+  return delay({ id: refund.id, status: refund.status }, 600);
+};
+// ---------------------------------------------------------------------------
 // User management: riders (admin)
 // Supports search, status, riderType, and minDeliveries filtering.
 // Falls back seamlessly to mock riders if backend API is unavailable/empty.
@@ -755,3 +976,154 @@ export const getRiderProfileExtras = async (riderId) => {
 };
 
 
+
+// ---------------------------------------------------------------------------
+// Dispatch management (admin)
+// TODO: Replace mocks with real endpoints once the backend is ready, e.g.
+//   getDispatchOverview     -> api.get("/admin/dispatch/overview/")
+//   getUnassignedOrders     -> api.get("/admin/dispatch/orders/", { params: { page, page_size } })
+//   getAvailableRiders      -> api.get("/admin/dispatch/riders/available/", { params: { limit } })
+//   getFleetAvailability    -> api.get("/admin/dispatch/fleets/availability/")
+//   getDispatchOrder        -> api.get(`/admin/dispatch/orders/${orderId}/`)
+//   getDispatchSuggestions  -> api.get(`/admin/dispatch/orders/${orderId}/suggestions/`, { params: { kind } })
+//   searchDispatchCandidates-> api.get(`/admin/dispatch/orders/${orderId}/candidates/`, { params: { kind, search } })
+//   assignOrder             -> api.post(`/admin/dispatch/orders/${orderId}/assign/`, payload)
+// Candidates: { id, kind: "rider" | "fleet", name, subtitle, fleet?, distanceKm, etaMinutes, rating, freeRiders? }
+// ---------------------------------------------------------------------------
+
+const DISPATCH_FLEETS = [
+  { id: "fl-1", name: "Swift Dispatch", freeRiders: 9, totalRiders: 24 },
+  { id: "fl-2", name: "Lagos Express", freeRiders: 6, totalRiders: 18 },
+  { id: "fl-3", name: "Island Couriers", freeRiders: 3, totalRiders: 15 },
+  { id: "fl-4", name: "Metro Riders", freeRiders: 4, totalRiders: 15 },
+  { id: "fl-5", name: "Quick Move", freeRiders: 0, totalRiders: 12 },
+];
+
+const DISPATCH_RIDERS = [
+  ["Emeka Nwankwo", "fl-1", 4.9],
+  ["Amara Okafor", "fl-2", 4.8],
+  ["Tunde Balogun", "fl-3", 4.7],
+  ["Chidi Eze", "fl-4", 4.6],
+  ["Bisi Adebayo", "fl-5", 4.5],
+  ["John Israel", null, 4.4],
+  ["Salem Mike", "fl-1", 4.8],
+  ["Emeka John", "fl-1", 4.6],
+  ["Ngozi Usman", "fl-2", 4.7],
+  ["Ibrahim Bello", null, 4.3],
+  ["Kemi Adeyemi", "fl-4", 4.9],
+  ["Osas Igbinedion", "fl-3", 4.5],
+].map(([name, fleetId, rating], i) => ({
+  id: `rd-${i + 1}`,
+  name,
+  fleetId,
+  fleet: DISPATCH_FLEETS.find((f) => f.id === fleetId)?.name ?? "Independent",
+  rating,
+}));
+
+const PACKAGES = ["Documents", "Food", "Electronics", "Parcel", "Clothing"];
+const DISPATCH_ADDRESSES = [
+  ["88 Sapele Road", "35 Ikpoba Slope", 6.2],
+  ["12 Airport Road", "4 Uselu Market Rd", 4.8],
+  ["7 Ring Road", "21 Ugbowo Lagos Rd", 5.5],
+  ["40 Ekenwan Road", "9 New Benin Rd", 3.9],
+  ["3 Akpakpava St", "18 Siluko Rd", 2.7],
+];
+
+let MOCK_UNASSIGNED = Array.from({ length: 8 }, (_, i) => {
+  const [pickup, dropoff, distanceKm] = DISPATCH_ADDRESSES[i % DISPATCH_ADDRESSES.length];
+  return {
+    id: `ORD-${48211 + i}`,
+    customer: `${FIRST_NAMES[i % FIRST_NAMES.length]} ${LAST_NAMES[(i + 3) % LAST_NAMES.length]}`,
+    pickup,
+    dropoff,
+    distanceKm,
+    package: PACKAGES[i % PACKAGES.length],
+    priority: i % 3 === 0 ? "urgent" : "pending",
+  };
+});
+
+const findUnassigned = (orderId) => MOCK_UNASSIGNED.find((o) => o.id === orderId);
+
+// Deterministic per-order ranking so each order always shows the same suggestions
+const riderCandidatesFor = (order) => {
+  const seed = Number(order.id.replace(/\D/g, "")) || 0;
+  return DISPATCH_RIDERS.filter((r) => DISPATCH_FLEETS.find((f) => f.id === r.fleetId)?.freeRiders !== 0)
+    .map((rider, i) => {
+      const distanceKm = Number((1.4 + ((i * 7 + seed) % 12) * 0.35).toFixed(1));
+      return {
+        id: rider.id,
+        kind: "rider",
+        name: rider.name,
+        fleet: rider.fleet,
+        rating: rider.rating,
+        distanceKm,
+        etaMinutes: Math.round(30 + distanceKm * 3 + order.distanceKm),
+      };
+    })
+    .sort((a, b) => a.etaMinutes - b.etaMinutes);
+};
+
+const fleetCandidatesFor = (order) =>
+  DISPATCH_FLEETS.filter((f) => f.freeRiders > 0)
+    .map((fleet, i) => {
+      const distanceKm = Number((1.8 + i * 0.6).toFixed(1));
+      return {
+        id: fleet.id,
+        kind: "fleet",
+        name: fleet.name,
+        freeRiders: fleet.freeRiders,
+        rating: Number((4.8 - i * 0.1).toFixed(1)),
+        distanceKm,
+        etaMinutes: Math.round(34 + distanceKm * 3 + order.distanceKm),
+      };
+    })
+    .sort((a, b) => a.etaMinutes - b.etaMinutes);
+
+const candidatesFor = (order, kind) => (kind === "fleet" ? fleetCandidatesFor(order) : riderCandidatesFor(order));
+
+const withOrder = (orderId, fn) => {
+  const order = findUnassigned(orderId);
+  return order ? fn(order) : Promise.reject(new Error(`Order ${orderId} is not waiting for dispatch`));
+};
+
+export const getDispatchOverview = () => {
+  const totalRiders = DISPATCH_FLEETS.reduce((sum, f) => sum + f.totalRiders, 0) + 2; // + independents
+  const freeRiders = DISPATCH_RIDERS.length;
+  const fleetsWithFree = DISPATCH_FLEETS.filter((f) => f.freeRiders > 0).length;
+  return delay({
+    unassignedOrders: { value: MOCK_UNASSIGNED.length },
+    availableRiders: { value: freeRiders, caption: `of ${totalRiders}` },
+    fleetAvailability: {
+      value: Math.round((fleetsWithFree / DISPATCH_FLEETS.length) * 100),
+      caption: `${fleetsWithFree} of ${DISPATCH_FLEETS.length} fleets have free riders`,
+    },
+  });
+};
+
+export const getUnassignedOrders = ({ page = 1, pageSize = 10 } = {}) =>
+  delay(paginate(MOCK_UNASSIGNED, MOCK_UNASSIGNED, page, pageSize));
+
+export const getAvailableRiders = ({ limit = 4 } = {}) =>
+  delay({ results: DISPATCH_RIDERS.slice(5, 5 + limit), count: DISPATCH_RIDERS.length });
+
+export const getFleetAvailability = () => delay(DISPATCH_FLEETS.map((f) => ({ ...f })));
+
+export const getDispatchOrder = (orderId) => withOrder(orderId, (order) => delay({ ...order }, 400));
+
+export const getDispatchSuggestions = (orderId, kind = "rider") =>
+  withOrder(orderId, (order) => delay(candidatesFor(order, kind).slice(0, 5), 400));
+
+// Everyone free for this order (manual assignment), filtered by name / fleet
+export const searchDispatchCandidates = (orderId, { kind = "rider", search = "" } = {}) =>
+  withOrder(orderId, (order) =>
+    delay(candidatesFor(order, kind).filter((c) => matchesSearch(c, ["name", "fleet"], search)), 300)
+  );
+
+// mode: "suggested" | "manual"; reason/note only for manual assignments
+export const assignOrder = ({ orderId, kind, candidateId, mode = "suggested", reason, note = "" }) =>
+  withOrder(orderId, (order) => {
+    const candidate = candidatesFor(order, kind).find((c) => c.id === candidateId);
+    if (!candidate) return Promise.reject(new Error("That rider or fleet is no longer available"));
+    MOCK_UNASSIGNED = MOCK_UNASSIGNED.filter((o) => o.id !== orderId);
+    return delay({ orderId, kind, assignee: candidate, mode, reason, note, assignedAt: new Date().toISOString() }, 700);
+  });

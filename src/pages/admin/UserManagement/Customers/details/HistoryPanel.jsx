@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Search } from "lucide-react";
 import StatusBadge from "../../../components/StatusBadge";
 import Pagination from "../../../components/Pagination";
 import ErrorBox from "../../../components/ErrorBox";
-import ExportPanel from "../../../components/ExportPanel";
+import TableToolbar from "../../../components/TableToolbar";
 import { exportRows } from "../../../components/exporters";
 import { formatShortDate } from "../../../components/formatters";
 import { useDebouncedValue } from "../../../components/useDebouncedValue";
@@ -117,44 +116,36 @@ const HistoryPanel = ({ customerId, tab }) => {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h4 className="text-base font-semibold text-[#343C6A]">
-          {tab.label}
-          {total != null && <span className="ml-2 text-sm font-normal text-gray-400 tabular-nums">({total})</span>}
-        </h4>
-        <div className="flex w-full items-center gap-3 sm:w-auto">
-          <div className="relative min-w-0 flex-1 sm:w-64 sm:flex-none">
-            <Search size={16} className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-400" />
-            <input
-              type="search"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              placeholder={tab.searchPlaceholder}
-              aria-label={`Search ${tab.label}`}
-              className="w-full rounded-full bg-gray-50 py-2 pr-4 pl-9 text-sm placeholder-gray-400 focus:bg-white focus:ring-2 focus:ring-[#FFF4E8] focus:outline-none"
-            />
-          </div>
-          <ExportPanel
-            title={`Export ${tab.noun.other}`}
-            noun={tab.noun}
-            onExport={handleExport}
-            scopes={[
-              {
-                id: "all",
-                label: `All ${tab.noun.other}`,
-                count: total,
-                description: `${total ?? 0} ${total === 1 ? tab.noun.one : tab.noun.other} in total`,
-              },
-              {
-                id: "current",
-                label: "Current View",
-                count: history.isLoading ? undefined : rows.length,
-                description: `${rows.length} ${rows.length === 1 ? tab.noun.one : tab.noun.other} shown in this page`,
-              },
-            ]}
-          />
-        </div>
-      </div>
+      <TableToolbar
+        className=""
+        title={tab.label}
+        count={total}
+        search={{
+          value: searchInput,
+          onChange: setSearchInput,
+          placeholder: tab.searchPlaceholder,
+          label: `Search ${tab.label}`,
+        }}
+        exportPanel={{
+          title: `Export ${tab.noun.other}`,
+          noun: tab.noun,
+          onExport: handleExport,
+          scopes: [
+            {
+              id: "all",
+              label: `All ${tab.noun.other}`,
+              count: total,
+              description: `${total ?? 0} ${total === 1 ? tab.noun.one : tab.noun.other} in total`,
+            },
+            {
+              id: "current",
+              label: "Current View",
+              count: history.isLoading ? undefined : rows.length,
+              description: `${rows.length} ${rows.length === 1 ? tab.noun.one : tab.noun.other} shown in this page`,
+            },
+          ],
+        }}
+      />
 
       {history.isError ? (
         <ErrorBox

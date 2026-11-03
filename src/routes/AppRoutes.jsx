@@ -34,6 +34,10 @@ import RiderReview from "../pages/admin/UserManagement/Riders/review/RiderReview
 import RiderDetails from "../pages/admin/UserManagement/Riders/details/RiderDetails";
 import AdminOrderManagement from "../pages/admin/OrderManagement/AdminOrderManagement";
 import AdminOrderDetails from "../pages/admin/OrderManagement/details/AdminOrderDetails";
+import AdminFinance from "../pages/admin/Finance/AdminFinance";
+import AdminNotifications from "../pages/admin/Notifcations/AdminNotifications";
+import AdminDispatch from "../pages/admin/Dispatch/AdminDispatch";
+import AssignOrder from "../pages/admin/Dispatch/assign/AssignOrder";
 
 const AppRoutes = () => {
   return (
@@ -84,7 +88,14 @@ const AppRoutes = () => {
                   path="/user-management/riders/:riderId/review"
                   element={<AdminSwitch admin={<RiderReview />} fallback={<Navigate to="/riders-management" replace />} />}
                 />
-                <Route path="/notifications" element={<Notifications />} />
+                <Route
+                  path="/notifications"
+                  element={<AdminSwitch admin={<AdminNotifications />} fallback={<Notifications />} />}
+                />
+                <Route
+                  path="/admin/notifications"
+                  element={<AdminSwitch admin={<AdminNotifications />} fallback={<Navigate to="/notifications" replace />} />}
+                />
                 
                 {/* Order Management - Admin gets full order dashboard/details, Non-admin gets track-orders & order-list */}
                 <Route
@@ -112,8 +123,20 @@ const AppRoutes = () => {
                 <Route path="/settings" element={<Navigate to="/settings/profile" replace />} />
                 <Route path="/settings/profile" element={<Profile />} />
                 <Route path="/settings/alerts" element={<NotificationSettings />} />
-                <Route path="/finance-reports" element={<FinanceReports />} />
-                <Route path="/finance-reports/all-transactions" element={<AllTransactions />} />
+                {/* Dispatch Management - admin only for now */}
+                <Route
+                  path="/dispatch-management"
+                  element={<AdminSwitch admin={<AdminDispatch />} fallback={<Navigate to="/dashboard" replace />} />}
+                />
+                <Route
+                  path="/dispatch-management/:orderId/assign"
+                  element={<AdminSwitch admin={<AssignOrder />} fallback={<Navigate to="/dashboard" replace />} />}
+                />
+                <Route path="/finance-reports" element={<AdminSwitch admin={<AdminFinance />} fallback={<FinanceReports />} />} />
+                <Route
+                  path="/finance-reports/all-transactions"
+                  element={<AdminSwitch admin={<Navigate to="/finance-reports?tab=transactions" replace />} fallback={<AllTransactions />} />}
+                />
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
               </Route>
             </Route>

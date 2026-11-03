@@ -20,6 +20,7 @@ import {
   ChevronRight,
   LogOut,
   UserCog,
+  Route as DispatchIcon,
 } from "lucide-react";
 
 const MainLayout = () => {
@@ -81,6 +82,10 @@ const MainLayout = () => {
           { path: "/order-management/order-list", label: "Order List" },
         ],
       },
+    // Dispatch is admin-only for now
+    ...(isAdmin
+      ? [{ path: "/dispatch-management", icon: DispatchIcon, label: "Dispatch Management" }]
+      : []),
     {
       path: "/finance-reports",
       icon: CreditCard,
@@ -406,7 +411,12 @@ const MainLayout = () => {
                 <Settings size={20} className="text-gray-600" />
               </button>
 
-              <button className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors relative">
+              <button
+                type="button"
+                onClick={() => navigate("/notifications")}
+                aria-label="View notifications"
+                className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors relative cursor-pointer"
+              >
                 <Bell size={20} className="text-gray-600" />
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
               </button>

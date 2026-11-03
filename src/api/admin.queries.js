@@ -16,6 +16,18 @@ import {
   getRiderDeliveries,
   getRiderPerformance,
   getRiderIncidents,
+  getFinanceOverview,
+  getRevenueSeries,
+  getTransactions,
+  getPayouts,
+  getRefunds,
+  getDispatchOverview,
+  getUnassignedOrders,
+  getAvailableRiders,
+  getFleetAvailability,
+  getDispatchOrder,
+  getDispatchSuggestions,
+  searchDispatchCandidates,
 } from "./admin.service";
 
 export const useAdminDashboardStats = () => {
@@ -195,4 +207,142 @@ export const useRiderIncidents = (riderId, { page, pageSize } = {}) => {
   });
 };
 
+// ---- Finance & Reports ------------------------------------------------------
 
+export const useFinanceOverview = () => {
+  return useQuery({
+    queryKey: ["admin", "finance", "overview"],
+    queryFn: getFinanceOverview,
+    staleTime: 2 * 60 * 1000,
+    retry: 2,
+  });
+};
+
+// range: "7d" | "30d" | "12m"
+export const useRevenueSeries = (range) => {
+  return useQuery({
+    queryKey: ["admin", "finance", "revenue", range],
+    queryFn: () => getRevenueSeries(range),
+    placeholderData: keepPreviousData, // keep the old bars while the new range loads
+    staleTime: 5 * 60 * 1000,
+    retry: 2,
+  });
+};
+
+export const useTransactions = ({ page, pageSize, search, type, status }) => {
+  return useQuery({
+    queryKey: ["admin", "finance", "transactions", "list", { page, pageSize, search, type, status }],
+    queryFn: () => getTransactions({ page, pageSize, search, type, status }),
+    placeholderData: keepPreviousData,
+    staleTime: 60 * 1000,
+    retry: 2,
+  });
+};
+
+// Result count for a not-yet-applied filter selection ("Show N Results")
+export const useTransactionCount = ({ search, type, status }, { enabled = true } = {}) => {
+  return useQuery({
+    queryKey: ["admin", "finance", "transactions", "count", { search, type, status }],
+    // TODO: swap for a dedicated count endpoint if the backend provides one
+    queryFn: () => getTransactions({ page: 1, pageSize: 1, search, type, status }),
+    select: (data) => data.count,
+    enabled,
+    placeholderData: keepPreviousData,
+    staleTime: 60 * 1000,
+  });
+};
+
+export const usePayouts = ({ page, pageSize }) => {
+  return useQuery({
+    queryKey: ["admin", "finance", "payouts", { page, pageSize }],
+    queryFn: () => getPayouts({ page, pageSize }),
+    placeholderData: keepPreviousData,
+    staleTime: 60 * 1000,
+    retry: 2,
+  });
+};
+
+export const useRefunds = ({ page, pageSize }) => {
+  return useQuery({
+    queryKey: ["admin", "finance", "refunds", { page, pageSize }],
+    queryFn: () => getRefunds({ page, pageSize }),
+    placeholderData: keepPreviousData,
+    staleTime: 60 * 1000,
+    retry: 2,
+  });
+};
+
+// ---- Dispatch management ----------------------------------------------------
+
+export const useDispatchOverview = () => {
+  return useQuery({
+    queryKey: ["admin", "dispatch", "overview"],
+    queryFn: getDispatchOverview,
+    staleTime: 30 * 1000,
+    refetchInterval: 60 * 1000, // availability changes quickly
+    retry: 2,
+  });
+};
+
+export const useUnassignedOrders = ({ page, pageSize }) => {
+  return useQuery({
+    queryKey: ["admin", "dispatch", "orders", { page, pageSize }],
+    queryFn: () => getUnassignedOrders({ page, pageSize }),
+    placeholderData: keepPreviousData,
+    staleTime: 30 * 1000,
+    refetchInterval: 60 * 1000,
+    retry: 2,
+  });
+};
+
+export const useAvailableRiders = ({ limit }) => {
+  return useQuery({
+    queryKey: ["admin", "dispatch", "riders", { limit }],
+    queryFn: () => getAvailableRiders({ limit }),
+    staleTime: 30 * 1000,
+    refetchInterval: 60 * 1000,
+    retry: 2,
+  });
+};
+
+export const useFleetAvailability = () => {
+  return useQuery({
+    queryKey: ["admin", "dispatch", "fleets"],
+    queryFn: getFleetAvailability,
+    staleTime: 30 * 1000,
+    refetchInterval: 60 * 1000,
+    retry: 2,
+  });
+};
+
+export const useDispatchOrder = (orderId) => {
+  return useQuery({
+    queryKey: ["admin", "dispatch", "order", orderId],
+    queryFn: () => getDispatchOrder(orderId),
+    enabled: !!orderId,
+    staleTime: 30 * 1000,
+    retry: 1,
+  });
+};
+
+// kind: "rider" | "fleet"
+export const useDispatchSuggestions = (orderId, kind) => {
+  return useQuery({
+    queryKey: ["admin", "dispatch", "order", orderId, "suggestions", kind],
+    queryFn: () => getDispatchSuggestions(orderId, kind),
+    enabled: !!orderId,
+    staleTime: 30 * 1000,
+    retry: 1,
+  });
+};
+
+export const useDispatchCandidates = (orderId, { kind, search }, { enabled = true } = {}) => {
+  return useQuery({
+    queryKey: ["admin", "dispatch", "order", orderId, "candidates", { kind, search }],
+    queryFn: () => searchDispatchCandidates(orderId, { kind, search }),
+    enabled: !!orderId && enabled,
+    placeholderData: keepPreviousData,
+    staleTime: 30 * 1000,
+    retry: 1,
+  });
+};

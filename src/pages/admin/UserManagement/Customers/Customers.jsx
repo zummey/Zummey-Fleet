@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import React, { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Search, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import AdminStatCard from "../../Dashboard/AdminStatCard";
 import AdminStatsSkeleton from "../../Dashboard/AdminStatsSkeleton";
 import { getTabById } from "../../Dashboard/adminDashboard.config";
@@ -9,19 +8,19 @@ import StatusBadge from "../../components/StatusBadge";
 import RowActionsMenu from "../../components/RowActionsMenu";
 import Pagination from "../../components/Pagination";
 import ErrorBox from "../../components/ErrorBox";
-import FilterPanel from "../../components/FilterPanel";
-import { defaultsFor, filtersFromParams, filtersToParams } from "../../components/filters";
-import ExportPanel from "../../components/ExportPanel";
+import TableToolbar from "../../components/TableToolbar";
+import EmptyState from "../../components/EmptyState";
+import Avatar from "../../components/Avatar";
+import { useTableParams } from "../../components/useTableParams";
 import { exportRows } from "../../components/exporters";
 import { formatLongDate } from "../../components/formatters";
-import { useDebouncedValue } from "../../components/useDebouncedValue";
 import {
   CUSTOMERS_PAGE_SIZE,
   CUSTOMERS_SUMMARY_TAB_ID,
   CUSTOMER_COLUMNS,
   CUSTOMER_EXPORT_COLUMNS,
   CUSTOMER_FILTER_GROUPS,
-  CUSTOMER_QUERY_PARAMS as P,
+  CUSTOMER_QUERY_PARAMS,
   toCustomerQuery,
 } from "./customers.config";
 import { getCustomerRowActions } from "./details/customerDetails.config";
@@ -31,45 +30,10 @@ import { exportCustomers } from "../../../../api/admin.service";
 
 const summaryTab = getTabById(CUSTOMERS_SUMMARY_TAB_ID);
 
-const initials = (name = "") =>
-  name
-    .split(" ")
-    .map((p) => p[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-
 const Customers = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const page = Math.max(1, Number(searchParams.get(P.page)) || 1);
-  const search = searchParams.get(P.search) ?? "";
-  const filters = filtersFromParams(CUSTOMER_FILTER_GROUPS, searchParams);
+  const table = useTableParams({ filterGroups: CUSTOMER_FILTER_GROUPS, keys: CUSTOMER_QUERY_PARAMS });
+  const { page, search, filters } = table;
   const query = { search, ...toCustomerQuery(filters) };
-
-  // Input updates instantly; the URL (and therefore the query) follows once typing pauses
-  const [searchInput, setSearchInput] = useState(search);
-  const debouncedSearch = useDebouncedValue(searchInput);
-
-  // Merge param changes into the URL. Changing search/filter always returns to page 1.
-  const updateParams = (changes, { resetPage = true } = {}) => {
-    setSearchParams(
-      (prev) => {
-        const next = new URLSearchParams(prev);
-        Object.entries(changes).forEach(([key, value]) => {
-          if (value === "" || value == null) next.delete(key);
-          else next.set(key, String(value));
-        });
-        if (resetPage) next.delete(P.page);
-        return next;
-      },
-      { replace: true }
-    );
-  };
-
-  useEffect(() => {
-    if (debouncedSearch.trim() !== search) updateParams({ [P.search]: debouncedSearch.trim() });
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only react to the debounced input
-  }, [debouncedSearch]);
 
   const stats = useAdminDashboardStats();
   const { handleAction, dialog } = useCustomerActions();
@@ -104,7 +68,6 @@ const Customers = () => {
   });
 
   const totalPages = customers.data?.totalPages ?? 1;
-  const isFiltered = !!search || JSON.stringify(filters) !== JSON.stringify(defaultsFor(CUSTOMER_FILTER_GROUPS));
 
   return (
     <div className="mb-6 space-y-6 font-poppins">
@@ -122,59 +85,44 @@ const Customers = () => {
       )}
 
       <section className="rounded-2xl bg-white p-5 sm:p-6">
-        {/* Toolbar */}
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <h4 className="text-base font-semibold text-[#343C6A]">
-            All Customers
-            {customers.data && (
-              <span className="ml-2 text-sm font-normal text-gray-400 tabular-nums">({customers.data.count.toLocaleString()})</span>
-            )}
-          </h4>
-
-          <div className="flex w-full flex-wrap items-center gap-3 sm:w-auto">
-            <div className="relative min-w-0 flex-1 sm:w-64 sm:flex-none">
-              <Search size={16} className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-400" />
-              <input
-                type="search"
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                placeholder="Search name, ID, phone or email"
-                aria-label="Search customers"
-                className="w-full rounded-full bg-gray-50 py-2 pr-4 pl-9 text-sm placeholder-gray-400 focus:bg-white focus:ring-2 focus:ring-[#FFF4E8] focus:outline-none"
-              />
-            </div>
-
-            <FilterPanel
-              groups={CUSTOMER_FILTER_GROUPS}
-              value={filters}
-              onApply={(selection) => updateParams(filtersToParams(CUSTOMER_FILTER_GROUPS, selection))}
-              onDraftChange={setDraftFilters}
-              resultCount={draftCount.data}
-              isCounting={draftCount.isFetching}
-            />
-
-            <ExportPanel
-              title="Export Customers"
-              noun={{ one: "Customer", other: "Customers" }}
-              onOpenChange={setExportOpen}
-              onExport={exporter.mutateAsync}
-              scopes={[
-                {
-                  id: "all",
-                  label: "All Customers",
-                  count: totalCount.data,
-                  description: `${(totalCount.data ?? 0).toLocaleString()} Customers in total`,
-                },
-                {
-                  id: "current",
-                  label: "Current View",
-                  count: customers.isLoading ? undefined : rows.length,
-                  description: `${rows.length} Customer${rows.length === 1 ? "" : "s"} shown in this page`,
-                },
-              ]}
-            />
-          </div>
-        </div>
+        <TableToolbar
+          title="All Customers"
+          count={customers.data?.count}
+          search={{
+            value: table.searchInput,
+            onChange: table.setSearchInput,
+            placeholder: "Search name, ID, phone or email",
+            label: "Search customers",
+          }}
+          filter={{
+            groups: CUSTOMER_FILTER_GROUPS,
+            value: filters,
+            onApply: table.applyFilters,
+            onDraftChange: setDraftFilters,
+            resultCount: draftCount.data,
+            isCounting: draftCount.isFetching,
+          }}
+          exportPanel={{
+            title: "Export Customers",
+            noun: { one: "Customer", other: "Customers" },
+            onOpenChange: setExportOpen,
+            onExport: exporter.mutateAsync,
+            scopes: [
+              {
+                id: "all",
+                label: "All Customers",
+                count: totalCount.data,
+                description: `${(totalCount.data ?? 0).toLocaleString()} Customers in total`,
+              },
+              {
+                id: "current",
+                label: "Current View",
+                count: customers.isLoading ? undefined : rows.length,
+                description: `${rows.length} Customer${rows.length === 1 ? "" : "s"} shown in this page`,
+              },
+            ],
+          }}
+        />
 
         {customers.isError ? (
           <ErrorBox
@@ -228,9 +176,7 @@ const Customers = () => {
                         <tr key={customer.id} className="text-[#343C6A] hover:bg-gray-50/60">
                           <td className="py-4 pr-4">
                             <div className="flex items-center gap-3">
-                              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#FFF4E8] text-xs font-semibold text-[#EB4827]">
-                                {initials(customer.name)}
-                              </span>
+                              <Avatar name={customer.name} size="h-11 w-11" />
                               <div>
                                 <p className="font-semibold whitespace-nowrap">{customer.name}</p>
                                 <p className="text-xs text-gray-400">{customer.code}</p>
@@ -258,30 +204,14 @@ const Customers = () => {
             </div>
 
             {!customers.isLoading && rows.length === 0 && (
-              <div className="flex flex-col items-center py-12 text-center">
-                <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-gray-400">
-                  <Users size={22} />
-                </span>
-                <p className="text-sm font-medium text-[#343C6A]">{isFiltered ? "No customers match" : "No customers yet"}</p>
-                <p className="mt-1 text-xs text-gray-400">
-                  {isFiltered ? "Try a different search term or filter." : "Customers will appear here once they sign up."}
-                </p>
-                {isFiltered && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSearchInput("");
-                      updateParams({
-                        [P.search]: "",
-                        ...filtersToParams(CUSTOMER_FILTER_GROUPS, defaultsFor(CUSTOMER_FILTER_GROUPS)),
-                      });
-                    }}
-                    className="mt-3 text-sm font-medium text-[#EB4827] hover:underline"
-                  >
-                    Clear search and filters
-                  </button>
-                )}
-              </div>
+              <EmptyState
+                icon={Users}
+                title={table.isFiltered ? "No customers match" : "No customers yet"}
+                description={
+                  table.isFiltered ? "Try a different search term or filter." : "Customers will appear here once they sign up."
+                }
+                action={table.isFiltered ? { label: "Clear search and filters", onClick: table.clearAll } : undefined}
+              />
             )}
 
             {rows.length > 0 && (
@@ -289,7 +219,7 @@ const Customers = () => {
                 <Pagination
                   page={page}
                   totalPages={totalPages}
-                  onChange={(next) => updateParams({ [P.page]: next }, { resetPage: false })}
+                  onChange={table.setPage}
                   disabled={customers.isFetching}
                 />
               </div>

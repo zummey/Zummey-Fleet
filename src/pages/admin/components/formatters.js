@@ -32,3 +32,27 @@ export const formatDateTime = (value) =>
     : "—";
 
 export const formatNaira = (amount) => (amount == null ? "—" : `₦${Number(amount).toLocaleString()}`);
+
+const pad = (n) => String(n).padStart(2, "0");
+
+// "2026-10-22 09:14 AM" (finance tables)
+export const formatTimestamp = (value) => {
+  if (!value) return "—";
+  const d = toDate(value);
+  const hours = d.getHours() % 12 || 12;
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(hours)}:${pad(d.getMinutes())} ${
+    d.getHours() < 12 ? "AM" : "PM"
+  }`;
+};
+
+// "Oct 22, 2026 · 09:14"
+export const formatDateDotTime = (value) => {
+  if (!value) return "—";
+  const d = toDate(value);
+  const date = d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  return `${date} · ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
+
+// "Oct 21"
+export const formatMonthDay = (value) =>
+  value ? toDate(value).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—";
