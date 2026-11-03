@@ -10,8 +10,14 @@ import React, { useId } from "react";
  * - label: optional visible text next to the switch
  * - ariaLabel: accessible name when no visible label is given
  * - disabled: boolean
+ * - color: "orange" (default) | "green" — tint when checked
  */
-const Switch = ({ checked = false, onChange, label, ariaLabel, disabled = false, className = "" }) => {
+const ON_COLORS = {
+  orange: "bg-[#EB4827]",
+  green: "bg-[#22C55E]",
+};
+
+const Switch = ({ checked = false, onChange, label, ariaLabel, disabled = false, color = "orange", className = "" }) => {
   const labelId = useId();
 
   return (
@@ -25,7 +31,7 @@ const Switch = ({ checked = false, onChange, label, ariaLabel, disabled = false,
         disabled={disabled}
         onClick={() => onChange?.(!checked)}
         className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 ${
-          checked ? "bg-[#EB4827]" : "bg-gray-300"
+          checked ? ON_COLORS[color] ?? ON_COLORS.orange : "bg-gray-300"
         }`}
       >
         <span
