@@ -21,6 +21,7 @@ import {
   LogOut,
   UserCog,
   Route as DispatchIcon,
+  MessagesSquare,
 } from "lucide-react";
 
 const MainLayout = () => {
@@ -91,6 +92,9 @@ const MainLayout = () => {
       icon: CreditCard,
       label: "Finance & Reports",
     },
+    ...(isAdmin
+      ? [{ path: "/communications", icon: MessagesSquare, label: "Communication Center" }]
+      : []),
   ];
 
   const bottomNavItems = [

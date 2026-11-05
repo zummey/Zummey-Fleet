@@ -38,6 +38,9 @@ import AdminFinance from "../pages/admin/Finance/AdminFinance";
 import AdminNotifications from "../pages/admin/Notifcations/AdminNotifications";
 import AdminDispatch from "../pages/admin/Dispatch/AdminDispatch";
 import AssignOrder from "../pages/admin/Dispatch/assign/AssignOrder";
+import CommunicationCenter from "../pages/admin/Communications/CommunicationCenter";
+import Conversation from "../pages/admin/Communications/Conversation";
+import NewBroadcast from "../pages/admin/Communications/NewBroadcast";
 
 const AppRoutes = () => {
   return (
@@ -138,6 +141,9 @@ const AppRoutes = () => {
                   element={<AdminSwitch admin={<Navigate to="/finance-reports?tab=transactions" replace />} fallback={<AllTransactions />} />}
                 />
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                <Route path="/communications" element={<AdminSwitch admin={<CommunicationCenter />} fallback={<Navigate to="/dashboard" replace />} />} />
+                <Route path="/communications/new-broadcast" element={<AdminSwitch admin={<NewBroadcast />} fallback={<Navigate to="/dashboard" replace />} />} />
+                <Route path="/communications/:conversationId" element={<AdminSwitch admin={<Conversation />} fallback={<Navigate to="/dashboard" replace />} />} />
               </Route>
             </Route>
             <Route path="/reset_password" element={<ResetPassword />} />
