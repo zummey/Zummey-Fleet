@@ -53,6 +53,13 @@ export const formatDateDotTime = (value) => {
   return `${date} · ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 };
 
+// "Oct 22, 09:14" (incident headers, timelines and logs)
+export const formatMonthDayTime = (value) => {
+  if (!value) return "—";
+  const d = toDate(value);
+  return `${d.toLocaleDateString("en-US", { month: "short", day: "numeric" })}, ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
+
 // "Oct 21"
 export const formatMonthDay = (value) =>
   value ? toDate(value).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—";

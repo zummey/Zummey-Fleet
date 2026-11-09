@@ -5,4 +5,5 @@ export const TONE_BUTTON_CLASSES = {
   success: "bg-green-600 hover:bg-green-700",
   info: "bg-blue-500 hover:bg-blue-600",
   warning: "bg-orange-500 hover:bg-orange-600",
+  dark: "bg-[#0B1437] hover:bg-[#1c2657]",
 };
