@@ -23,6 +23,7 @@ import {
   Route as DispatchIcon,
   MessagesSquare,
   TriangleAlert,
+  ChartColumn,
 } from "lucide-react";
 
 const MainLayout = () => {
@@ -84,12 +85,13 @@ const MainLayout = () => {
           { path: "/order-management/order-list", label: "Order List" },
         ],
       },
-    // Dispatch, communications and incidents are admin-only for now
+    // Dispatch, communications, incidents and analytics are admin-only for now
     ...(isAdmin
       ? [
         { path: "/dispatch-management", icon: DispatchIcon, label: "Dispatch Management" },
         { path: "/communications", icon: MessagesSquare, label: "Communication Center" },
         { path: "/incident-management", icon: TriangleAlert, label: "Incident Management" },
+        { path: "/analytics-management", icon: ChartColumn, label: "Analytics Management" },
       ]
       : []),
     {

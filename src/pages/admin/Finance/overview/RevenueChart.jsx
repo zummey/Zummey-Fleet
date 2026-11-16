@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import ErrorBox from "../../components/ErrorBox";
+import RangeToggle from "../../components/RangeToggle";
 import { formatNaira } from "../../components/formatters";
 import { DEFAULT_REVENUE_RANGE, REVENUE_RANGES } from "../finance.config";
 import { useRevenueSeries } from "../../../../api/admin.queries";
@@ -36,25 +37,7 @@ const RevenueChart = () => {
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h4 className="text-base font-semibold text-[#343C6A]">Revenue per {range === "12m" ? "month" : "day"}</h4>
 
-        <div role="radiogroup" aria-label="Revenue range" className="flex rounded-lg bg-gray-50 p-1">
-          {REVENUE_RANGES.map((r) => {
-            const selected = r.id === range;
-            return (
-              <button
-                key={r.id}
-                type="button"
-                role="radio"
-                aria-checked={selected}
-                onClick={() => setRange(r.id)}
-                className={`rounded-md px-3 py-1 text-xs whitespace-nowrap transition-colors ${
-                  selected ? "bg-white font-medium text-[#343C6A] shadow-sm" : "text-gray-500 hover:text-[#343C6A]"
-                }`}
-              >
-                {r.label}
-              </button>
-            );
-          })}
-        </div>
+        <RangeToggle ranges={REVENUE_RANGES} value={range} onChange={setRange} label="Revenue range" />
       </div>
 
       {series.isError ? (

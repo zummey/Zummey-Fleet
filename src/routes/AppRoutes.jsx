@@ -43,6 +43,7 @@ import Conversation from "../pages/admin/Communications/Conversation";
 import NewBroadcast from "../pages/admin/Communications/NewBroadcast";
 import AdminIncidents from "../pages/admin/Incidents/AdminIncidents";
 import IncidentDetails from "../pages/admin/Incidents/details/IncidentDetails";
+import AdminAnalytics from "../pages/admin/Analytics/AdminAnalytics";
 
 const AppRoutes = () => {
   return (
@@ -147,6 +148,7 @@ const AppRoutes = () => {
                 <Route path="/communications/new-broadcast" element={<AdminSwitch admin={<NewBroadcast />} fallback={<Navigate to="/dashboard" replace />} />} />
                 <Route path="/incident-management" element={<AdminSwitch admin={<AdminIncidents />} fallback={<Navigate to="/dashboard" replace />} />} />
                 <Route path="/incident-management/:incidentId" element={<AdminSwitch admin={<IncidentDetails />} fallback={<Navigate to="/dashboard" replace />} />} />
+                <Route path="/analytics-management" element={<AdminSwitch admin={<AdminAnalytics />} fallback={<Navigate to="/dashboard" replace />} />} />
                 <Route path="/communications/:conversationId" element={<AdminSwitch admin={<Conversation />} fallback={<Navigate to="/dashboard" replace />} />} />
               </Route>
             </Route>
