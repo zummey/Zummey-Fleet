@@ -3,19 +3,25 @@ import Modal from "./Modal";
 import { TONE_BUTTON_CLASSES } from "./dialogTones";
 
 /**
- * Confirm dialog that asks for a reason (radio list) plus an optional note.
- * Used for holding payouts and rejecting refunds.
+ * Confirm dialog that asks for a reason plus an optional note.
+ * Used for holding payouts, rejecting refunds, and escalating / resolving incidents.
  *
- * - reasons: [{ value, label }]; choosing a value listed in `noteRequiredFor` makes the note required
+ * - reasons: [{ value, label }]
+ * - layout: "list" (bordered radio rows, default) | "chips" (pill buttons)
+ * - noteRequiredFor: reason values that make the note required, or `true` to always require it
+ * - reasonsLabel / noteHint: copy for the reason legend and the "note required" hint
  * - onConfirm({ reason, note })
  */
 const ReasonDialog = ({
   title,
   description,
   reasons,
+  reasonsLabel = "Reason",
+  layout = "list",
   noteLabel = "Note (optional)",
   notePlaceholder = "",
   noteRequiredFor = ["other"],
+  noteHint = "Add a short note when choosing “Other”.",
   confirmLabel = "Confirm",
   tone = "default",
   isPending = false,
@@ -29,7 +35,7 @@ const ReasonDialog = ({
   const descId = useId();
   const noteId = useId();
 
-  const noteRequired = noteRequiredFor.includes(reason);
+  const noteRequired = noteRequiredFor === true || (Array.isArray(noteRequiredFor) && noteRequiredFor.includes(reason));
   const canConfirm = !!reason && (!noteRequired || note.trim().length > 0) && !isPending;
 
   const handleSubmit = (e) => {
@@ -48,10 +54,32 @@ const ReasonDialog = ({
         </p>
 
         <fieldset className="mt-4" disabled={isPending}>
-          <legend className="mb-2 text-xs text-gray-400">Reason</legend>
-          <div className="space-y-2">
+          <legend className="mb-2 text-xs text-gray-400">{reasonsLabel}</legend>
+          <div className={layout === "chips" ? "flex flex-wrap gap-2" : "space-y-2"}>
             {reasons.map((option) => {
               const selected = option.value === reason;
+              if (layout === "chips") {
+                return (
+                  <label
+                    key={option.value}
+                    className={`cursor-pointer rounded-full border px-3 py-1 text-xs transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-orange-300 ${
+                      selected
+                        ? "border-[#0B1437] bg-[#0B1437] text-white"
+                        : "border-gray-300 text-[#343C6A] hover:bg-gray-50"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name={titleId}
+                      value={option.value}
+                      checked={selected}
+                      onChange={() => setReason(option.value)}
+                      className="sr-only"
+                    />
+                    {option.label}
+                  </label>
+                );
+              }
               return (
                 <label
                   key={option.value}
@@ -94,9 +122,7 @@ const ReasonDialog = ({
           placeholder={notePlaceholder}
           className="w-full resize-none rounded-lg border border-gray-200 px-3 py-2 text-sm text-[#343C6A] placeholder-gray-400 focus:border-[#EB4827]/60 focus:ring-2 focus:ring-[#FFF4E8] focus:outline-none"
         />
-        {noteRequired && !note.trim() && (
-          <p className="mt-1 text-xs text-gray-400">Add a short note when choosing “Other”.</p>
-        )}
+        {noteRequired && !note.trim() && reason && <p className="mt-1 text-xs text-gray-400">{noteHint}</p>}
 
         {error && (
           <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">

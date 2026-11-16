@@ -57,6 +57,8 @@ export const FORMATTERS = {
     if (n >= 1_000) return `₦${+(n / 1_000).toFixed(1)}K`;
     return `₦${n.toLocaleString()}`;
   },
+  percent: (v) => `${Number(v ?? 0)}%`,
+  minutes: (v) => `${Number(v ?? 0)} min`,
 };
 
 export const STAT_TABS = [

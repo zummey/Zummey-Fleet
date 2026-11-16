@@ -5,13 +5,15 @@ import { TONE_BUTTON_CLASSES } from "./dialogTones";
 
 /**
  * Simple confirm dialog for destructive or important actions.
- * tone: "default" | "danger" (adds a warning icon) | "success" | "info" | "warning"
+ * tone: "default" | "danger" (adds a warning icon) | "success" | "info" | "warning" | "dark"
+ * notice: optional amber callout under the description (e.g. "This cannot be undone.")
  */
 const ConfirmDialog = ({
   title,
   description,
   confirmLabel = "Confirm",
   tone = "default",
+  notice,
   isPending = false,
   error,
   onConfirm,
@@ -55,6 +57,10 @@ const ConfirmDialog = ({
           <X size={18} />
         </button>
       </div>
+
+      {notice && (
+        <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">{notice}</p>
+      )}
 
       {error && (
         <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">

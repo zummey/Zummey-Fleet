@@ -22,6 +22,8 @@ import {
   UserCog,
   Route as DispatchIcon,
   MessagesSquare,
+  TriangleAlert,
+  ChartColumn,
 } from "lucide-react";
 
 const MainLayout = () => {
@@ -83,18 +85,20 @@ const MainLayout = () => {
           { path: "/order-management/order-list", label: "Order List" },
         ],
       },
-    // Dispatch is admin-only for now
+    // Dispatch, communications, incidents and analytics are admin-only for now
     ...(isAdmin
-      ? [{ path: "/dispatch-management", icon: DispatchIcon, label: "Dispatch Management" }]
+      ? [
+        { path: "/dispatch-management", icon: DispatchIcon, label: "Dispatch Management" },
+        { path: "/communications", icon: MessagesSquare, label: "Communication Center" },
+        { path: "/incident-management", icon: TriangleAlert, label: "Incident Management" },
+        { path: "/analytics-management", icon: ChartColumn, label: "Analytics Management" },
+      ]
       : []),
     {
       path: "/finance-reports",
       icon: CreditCard,
       label: "Finance & Reports",
     },
-    ...(isAdmin
-      ? [{ path: "/communications", icon: MessagesSquare, label: "Communication Center" }]
-      : []),
   ];
 
   const bottomNavItems = [
@@ -434,7 +438,9 @@ const MainLayout = () => {
           </div>
         </header>
 
-        <main className={`flex-1 overflow-y-auto bg-gray-50 ${location.pathname.startsWith('/settings') ? '' : 'p-6'}`}>
+        {/* `relative` keeps absolutely positioned children (e.g. Tailwind's sr-only labels) inside
+            this scroll area; without it they can stretch the window and leave a blank strip below the app */}
+        <main className={`relative flex-1 overflow-y-auto bg-gray-50 ${location.pathname.startsWith('/settings') ? '' : 'p-6'}`}>
           <Outlet />
         </main>
       </div>
