@@ -1,3 +1,4 @@
+import { useAdminAbility } from "../../../../auth/useAdminAbility";
 import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
@@ -65,6 +66,7 @@ const RiderAvatar = ({ rider }) => {
 };
 
 const AdminRiders = ({ onAction }) => {
+  const canEdit = useAdminAbility().can("edit", "riders");
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const page = Math.max(1, Number(searchParams.get(P.page)) || 1);
@@ -324,7 +326,7 @@ const AdminRiders = ({ onAction }) => {
                           <td className="py-4 text-right">
                             <RowActionsMenu
                               label={`Actions for ${rider.name}`}
-                              actions={RIDER_ROW_ACTIONS}
+                              actions={RIDER_ROW_ACTIONS.filter(({ id }) => canEdit || id === "view")}
                               onSelect={(actionId) => handleAction(actionId, rider)}
                             />
                           </td>

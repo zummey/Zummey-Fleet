@@ -1,3 +1,4 @@
+import { useAdminAbility } from "../../../../../auth/useAdminAbility";
 import React from "react";
 import { CircleX, RotateCcw } from "lucide-react";
 import StatusBadge from "../../../components/StatusBadge";
@@ -12,6 +13,7 @@ const initials = (name = "") =>
     .toUpperCase();
 
 const CustomerProfileCard = ({ customer, onAction }) => {
+  const canEdit = useAdminAbility().can("edit", "customers");
   const isSuspended = customer.status === "suspended";
 
   return (
@@ -28,7 +30,7 @@ const CustomerProfileCard = ({ customer, onAction }) => {
           <StatusBadge status={customer.status} />
         </div>
 
-        <button
+        {canEdit && <button
           type="button"
           onClick={() => onAction(isSuspended ? "reactivate" : "suspend", customer)}
           className={`inline-flex items-center gap-1.5 rounded-lg px-5 py-2 text-sm font-medium transition-colors ${
@@ -37,7 +39,7 @@ const CustomerProfileCard = ({ customer, onAction }) => {
         >
           {isSuspended ? <RotateCcw size={16} /> : <CircleX size={16} />}
           {isSuspended ? "Reactivate" : "Suspend"}
-        </button>
+        </button>}
       </div>
 
       <div className="grid grid-cols-1 gap-5 pt-5 sm:grid-cols-2 lg:grid-cols-4 lg:divide-x lg:divide-gray-100">

@@ -1,3 +1,7 @@
+import { AdminPermissionsRoute, UserManagementIndex } from "./AdminPermissionsRoute";
+import AdminDirectory from "../pages/superadmin/AdminManagement/AdminDirectory";
+import AdminDetails from "../pages/superadmin/AdminManagement/AdminDetails";
+import AdminForm from "../pages/superadmin/AdminManagement/AdminForm";
 import React from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import AuthLayout from "../components/Layouts/AuthLayout";
@@ -45,7 +49,6 @@ import AdminIncidents from "../pages/admin/Incidents/AdminIncidents";
 import IncidentDetails from "../pages/admin/Incidents/details/IncidentDetails";
 import AdminAnalytics from "../pages/admin/Analytics/AdminAnalytics";
 import SuperAdminPricing from "../pages/superadmin/Pricing/SuperAdminPricing";
-import SuperAdminSwitch from "../pages/superadmin/SuperAdminSwitch";
 
 const AppRoutes = () => {
   return (
@@ -59,100 +62,107 @@ const AppRoutes = () => {
             </Route>
             <Route element={<MainLayout />}>
               <Route element={<ProtectedRoute />}>
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route
-                  path="/fleet-management"
-                  element={<AdminSwitch admin={<AdminFleetManagement />} fallback={<FleetManagement />} />}
-                />
-                <Route
-                  path="/fleet-management/:fleetId"
-                  element={<AdminSwitch admin={<AdminFleetDetails />} fallback={<Navigate to="/fleet-management" replace />} />}
-                />
-                <Route
-                  path="/fleet-management/:fleetId/review"
-                  element={<AdminSwitch admin={<FleetReview />} fallback={<Navigate to="/fleet-management" replace />} />}
-                />
-                <Route
-                  path="/user-management"
-                  element={<AdminSwitch admin={<Navigate to="/user-management/customers" replace />} fallback={<Navigate to="/dashboard" replace />} />}
-                />
-                <Route
-                  path="/user-management/customers"
-                  element={<AdminSwitch admin={<Customers />} fallback={<Navigate to="/dashboard" replace />} />}
-                />
-                <Route
-                  path="/user-management/customers/:customerId"
-                  element={<AdminSwitch admin={<CustomerDetails />} fallback={<Navigate to="/dashboard" replace />} />}
-                />
-                <Route
-                  path="/user-management/riders"
-                  element={<AdminSwitch admin={<AdminRiders />} fallback={<Navigate to="/riders-management" replace />} />}
-                />
-                <Route
-                  path="/user-management/riders/:riderId"
-                  element={<AdminSwitch admin={<RiderDetails />} fallback={<Navigate to="/riders-management" replace />} />}
-                />
-                <Route
-                  path="/user-management/riders/:riderId/review"
-                  element={<AdminSwitch admin={<RiderReview />} fallback={<Navigate to="/riders-management" replace />} />}
-                />
-                <Route
-                  path="/notifications"
-                  element={<AdminSwitch admin={<AdminNotifications />} fallback={<Notifications />} />}
-                />
-                <Route
-                  path="/admin/notifications"
-                  element={<AdminSwitch admin={<AdminNotifications />} fallback={<Navigate to="/notifications" replace />} />}
-                />
+                <Route element={<AdminPermissionsRoute />}>
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/admin-management" element={<AdminDirectory />} />
+                  <Route path="/admin-management/new" element={<AdminForm />} />
+                  <Route path="/admin-management/:adminId" element={<AdminDetails />} />
+                  <Route path="/admin-management/:adminId/edit-permissions" element={<AdminForm />} />
+                  <Route path="/live-tracking" element={<TrackOrders />} />
+                  <Route
+                    path="/fleet-management"
+                    element={<AdminSwitch admin={<AdminFleetManagement />} fallback={<FleetManagement />} />}
+                  />
+                  <Route
+                    path="/fleet-management/:fleetId"
+                    element={<AdminSwitch admin={<AdminFleetDetails />} fallback={<Navigate to="/fleet-management" replace />} />}
+                  />
+                  <Route
+                    path="/fleet-management/:fleetId/review"
+                    element={<AdminSwitch admin={<FleetReview />} fallback={<Navigate to="/fleet-management" replace />} />}
+                  />
+                  <Route
+                    path="/user-management"
+                    element={<AdminSwitch admin={<UserManagementIndex />} fallback={<Navigate to="/dashboard" replace />} />}
+                  />
+                  <Route
+                    path="/user-management/customers"
+                    element={<AdminSwitch admin={<Customers />} fallback={<Navigate to="/dashboard" replace />} />}
+                  />
+                  <Route
+                    path="/user-management/customers/:customerId"
+                    element={<AdminSwitch admin={<CustomerDetails />} fallback={<Navigate to="/dashboard" replace />} />}
+                  />
+                  <Route
+                    path="/user-management/riders"
+                    element={<AdminSwitch admin={<AdminRiders />} fallback={<Navigate to="/riders-management" replace />} />}
+                  />
+                  <Route
+                    path="/user-management/riders/:riderId"
+                    element={<AdminSwitch admin={<RiderDetails />} fallback={<Navigate to="/riders-management" replace />} />}
+                  />
+                  <Route
+                    path="/user-management/riders/:riderId/review"
+                    element={<AdminSwitch admin={<RiderReview />} fallback={<Navigate to="/riders-management" replace />} />}
+                  />
+                  <Route
+                    path="/notifications"
+                    element={<AdminSwitch admin={<AdminNotifications />} fallback={<Notifications />} />}
+                  />
+                  <Route
+                    path="/admin/notifications"
+                    element={<AdminSwitch admin={<AdminNotifications />} fallback={<Navigate to="/notifications" replace />} />}
+                  />
                 
-                {/* Order Management - Admin gets full order dashboard/details, Non-admin gets track-orders & order-list */}
-                <Route
-                  path="/order-management"
-                  element={<AdminSwitch admin={<AdminOrderManagement />} fallback={<Navigate to="/order-management/order-list" replace />} />}
-                />
-                <Route
-                  path="/order-management/:orderId"
-                  element={<AdminSwitch admin={<AdminOrderDetails />} fallback={<Navigate to="/order-management/order-list" replace />} />}
-                />
-                <Route
-                  path="/order-management/track-orders"
-                  element={<AdminSwitch admin={<Navigate to="/order-management" replace />} fallback={<TrackOrders />} />}
-                />
-                <Route
-                  path="/order-management/order-list"
-                  element={<AdminSwitch admin={<Navigate to="/order-management" replace />} fallback={<OrderList />} />}
-                />
+                  {/* Order Management - Admin gets full order dashboard/details, Non-admin gets track-orders & order-list */}
+                  <Route
+                    path="/order-management"
+                    element={<AdminSwitch admin={<AdminOrderManagement />} fallback={<Navigate to="/order-management/order-list" replace />} />}
+                  />
+                  <Route
+                    path="/order-management/:orderId"
+                    element={<AdminSwitch admin={<AdminOrderDetails />} fallback={<Navigate to="/order-management/order-list" replace />} />}
+                  />
+                  <Route
+                    path="/order-management/track-orders"
+                    element={<AdminSwitch admin={<Navigate to="/live-tracking" replace />} fallback={<TrackOrders />} />}
+                  />
+                  <Route
+                    path="/order-management/order-list"
+                    element={<AdminSwitch admin={<Navigate to="/order-management" replace />} fallback={<OrderList />} />}
+                  />
 
-                <Route path="/riders-management" element={<AdminSwitch admin={<Navigate to="/user-management/riders" replace />} fallback={<RidersManagement />} />} />
-                <Route path="/riders-management/add-rider/signup" element={<Signup />} />
-                <Route path="/riders-management/add-rider/personal-info" element={<PersonalInfo />} />
-                <Route path="/riders-management/add-rider/legal-licensing" element={<LegalLicensing />} />
-                <Route path="/riders-management/add-rider/document-upload" element={<DocumentUpload />} />
-                <Route path="/settings" element={<Navigate to="/settings/profile" replace />} />
-                <Route path="/settings/profile" element={<Profile />} />
-                <Route path="/settings/alerts" element={<NotificationSettings />} />
-                {/* Dispatch Management - admin only for now */}
-                <Route
-                  path="/dispatch-management"
-                  element={<AdminSwitch admin={<AdminDispatch />} fallback={<Navigate to="/dashboard" replace />} />}
-                />
-                <Route
-                  path="/dispatch-management/:orderId/assign"
-                  element={<AdminSwitch admin={<AssignOrder />} fallback={<Navigate to="/dashboard" replace />} />}
-                />
-                <Route path="/finance-reports" element={<AdminSwitch admin={<AdminFinance />} fallback={<FinanceReports />} />} />
-                <Route
-                  path="/finance-reports/all-transactions"
-                  element={<AdminSwitch admin={<Navigate to="/finance-reports?tab=transactions" replace />} fallback={<AllTransactions />} />}
-                />
-                <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                <Route path="/communications" element={<AdminSwitch admin={<CommunicationCenter />} fallback={<Navigate to="/dashboard" replace />} />} />
-                <Route path="/communications/new-broadcast" element={<AdminSwitch admin={<NewBroadcast />} fallback={<Navigate to="/dashboard" replace />} />} />
-                <Route path="/incident-management" element={<AdminSwitch admin={<AdminIncidents />} fallback={<Navigate to="/dashboard" replace />} />} />
-                <Route path="/incident-management/:incidentId" element={<AdminSwitch admin={<IncidentDetails />} fallback={<Navigate to="/dashboard" replace />} />} />
-                <Route path="/analytics-management" element={<AdminSwitch admin={<AdminAnalytics />} fallback={<Navigate to="/dashboard" replace />} />} />
-                <Route path="/pricing-management" element={<SuperAdminSwitch superAdmin={<SuperAdminPricing />} fallback={<Navigate to="/dashboard" replace />} />} />
-                <Route path="/communications/:conversationId" element={<AdminSwitch admin={<Conversation />} fallback={<Navigate to="/dashboard" replace />} />} />
+                  <Route path="/riders-management" element={<AdminSwitch admin={<Navigate to="/user-management/riders" replace />} fallback={<RidersManagement />} />} />
+                  <Route path="/riders-management/add-rider/signup" element={<Signup />} />
+                  <Route path="/riders-management/add-rider/personal-info" element={<PersonalInfo />} />
+                  <Route path="/riders-management/add-rider/legal-licensing" element={<LegalLicensing />} />
+                  <Route path="/riders-management/add-rider/document-upload" element={<DocumentUpload />} />
+                  <Route path="/settings" element={<Navigate to="/settings/profile" replace />} />
+                  <Route path="/settings/profile" element={<Profile />} />
+                  <Route path="/settings/alerts" element={<NotificationSettings />} />
+                  {/* Dispatch Management - admin only for now */}
+                  <Route
+                    path="/dispatch-management"
+                    element={<AdminSwitch admin={<AdminDispatch />} fallback={<Navigate to="/dashboard" replace />} />}
+                  />
+                  <Route
+                    path="/dispatch-management/:orderId/assign"
+                    element={<AdminSwitch admin={<AssignOrder />} fallback={<Navigate to="/dashboard" replace />} />}
+                  />
+                  <Route path="/finance-reports" element={<AdminSwitch admin={<AdminFinance />} fallback={<FinanceReports />} />} />
+                  <Route
+                    path="/finance-reports/all-transactions"
+                    element={<AdminSwitch admin={<Navigate to="/finance-reports?tab=transactions" replace />} fallback={<AllTransactions />} />}
+                  />
+                  <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                  <Route path="/communications" element={<AdminSwitch admin={<CommunicationCenter />} fallback={<Navigate to="/dashboard" replace />} />} />
+                  <Route path="/communications/new-broadcast" element={<AdminSwitch admin={<NewBroadcast />} fallback={<Navigate to="/dashboard" replace />} />} />
+                  <Route path="/incident-management" element={<AdminSwitch admin={<AdminIncidents />} fallback={<Navigate to="/dashboard" replace />} />} />
+                  <Route path="/incident-management/:incidentId" element={<AdminSwitch admin={<IncidentDetails />} fallback={<Navigate to="/dashboard" replace />} />} />
+                  <Route path="/analytics-management" element={<AdminSwitch admin={<AdminAnalytics />} fallback={<Navigate to="/dashboard" replace />} />} />
+                  <Route path="/pricing-management" element={<SuperAdminPricing />} />
+                  <Route path="/communications/:conversationId" element={<AdminSwitch admin={<Conversation />} fallback={<Navigate to="/dashboard" replace />} />} />
+                </Route>
               </Route>
             </Route>
             <Route path="/reset_password" element={<ResetPassword />} />

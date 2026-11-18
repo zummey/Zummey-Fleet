@@ -1,3 +1,4 @@
+import { requireAdminEdit } from "../../../../../auth/useAdminAbility";
 import React, { useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
@@ -51,6 +52,7 @@ const RiderDetails = () => {
   const [pendingAction, setPendingAction] = useState(null); // { actionId, rider }
   const statusMutation = useMutation({
     mutationFn: ({ actionId, rider }) => {
+      requireAdminEdit("riders");
       const statusMap = { approve: "active", suspend: "suspended", reactivate: "active" };
       return updateRiderStatus({ riderId: rider.id, status: statusMap[actionId] });
     },

@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { ADMIN_ROLES } from "../auth/adminPermissions";
 
 // Which dashboard is being viewed. Picked from the header dropdown in MainLayout.
 // Persisted to localStorage so it survives a page refresh.
@@ -10,17 +11,17 @@ import { persist } from "zustand/middleware";
 export const ROLES = [
   { id: "fleet", label: "Fleet Manager" },
   { id: "admin", label: "Admin" },
-  { id: "superadmin", label: "Super Admin" },
+  ...Object.entries(ADMIN_ROLES).filter(([id]) => id !== "custom").map(([id, label]) => ({ id, label })),
 ];
 
 const DEFAULT_ROLE = "fleet";
-const isRole = (role) => ROLES.some((r) => r.id === role);
+const isRole = (role) => ROLES.some((r) => r.id === role) || (typeof role === "string" && role.startsWith("custom:"));
 
-// Super admins also get every admin screen, so `isAdmin` is true for both.
+// Admin previews share the admin layout.
 // Existing code reads `isAdmin`; super-admin-only screens read `isSuperAdmin`.
 const flagsFor = (role) => ({
   role,
-  isAdmin: role === "admin" || role === "superadmin",
+  isAdmin: role !== DEFAULT_ROLE,
   isSuperAdmin: role === "superadmin",
 });
 

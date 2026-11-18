@@ -1,3 +1,4 @@
+import { useAdminAbility } from "../../../auth/useAdminAbility";
 import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -29,6 +30,7 @@ import EscalateIssueModal from "./modals/EscalateIssueModal";
 import CancelOrderModal from "./modals/CancelOrderModal";
 
 const AdminOrderManagement = () => {
+  const canEdit = useAdminAbility().can("edit", "orders");
   const navigate = useNavigate();
 
   // Queries
@@ -162,6 +164,7 @@ const AdminOrderManagement = () => {
 
   // Modal actions
   const handleReassignConfirm = ({ orderId, rider }) => {
+    if (!canEdit) return;
     setOrders((prev) =>
       prev.map((o) =>
         o.id === orderId
@@ -185,6 +188,7 @@ const AdminOrderManagement = () => {
   };
 
   const handleEscalateConfirm = ({ orderId, issue, priority }) => {
+    if (!canEdit) return;
     setOrders((prev) =>
       prev.map((o) =>
         o.id === orderId
@@ -199,6 +203,7 @@ const AdminOrderManagement = () => {
   };
 
   const handleCancelConfirm = ({ orderId, reason }) => {
+    if (!canEdit) return;
     setOrders((prev) =>
       prev.map((o) =>
         o.id === orderId
@@ -483,7 +488,7 @@ const AdminOrderManagement = () => {
                                 <span>View Details</span>
                               </button>
 
-                              {normStatus !== "delivered" && normStatus !== "cancelled" && normStatus !== "failed" && (
+                              {canEdit && normStatus !== "delivered" && normStatus !== "cancelled" && normStatus !== "failed" && (
                                 <button
                                   type="button"
                                   onClick={(e) => handleOpenAction(e, order, "reassign")}
@@ -494,16 +499,16 @@ const AdminOrderManagement = () => {
                                 </button>
                               )}
 
-                              <button
+                              {canEdit && <button
                                 type="button"
                                 onClick={(e) => handleOpenAction(e, order, "escalate")}
                                 className="w-full px-3.5 py-2 text-xs text-amber-700 hover:bg-amber-50/60 flex items-center gap-2.5 transition-colors font-medium"
                               >
                                 <AlertTriangle size={14} className="text-amber-500" />
                                 <span>Escalate Issue</span>
-                              </button>
+                              </button>}
 
-                              {normStatus !== "delivered" && normStatus !== "cancelled" && (
+                              {canEdit && normStatus !== "delivered" && normStatus !== "cancelled" && (
                                 <button
                                   type="button"
                                   onClick={(e) => handleOpenAction(e, order, "cancel")}
@@ -555,7 +560,7 @@ const AdminOrderManagement = () => {
 
       {/* Modals */}
       <ReassignRiderModal
-        isOpen={activeModal === "reassign"}
+        isOpen={canEdit && activeModal === "reassign"}
         onClose={() => {
           setActiveModal(null);
           setSelectedOrder(null);
@@ -565,7 +570,7 @@ const AdminOrderManagement = () => {
       />
 
       <EscalateIssueModal
-        isOpen={activeModal === "escalate"}
+        isOpen={canEdit && activeModal === "escalate"}
         onClose={() => {
           setActiveModal(null);
           setSelectedOrder(null);
@@ -575,7 +580,7 @@ const AdminOrderManagement = () => {
       />
 
       <CancelOrderModal
-        isOpen={activeModal === "cancel"}
+        isOpen={canEdit && activeModal === "cancel"}
         onClose={() => {
           setActiveModal(null);
           setSelectedOrder(null);

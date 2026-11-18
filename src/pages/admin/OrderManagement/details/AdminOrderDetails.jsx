@@ -1,3 +1,4 @@
+import { useAdminAbility } from "../../../../auth/useAdminAbility";
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
@@ -19,6 +20,7 @@ import EscalateIssueModal from "../modals/EscalateIssueModal";
 import CancelOrderModal from "../modals/CancelOrderModal";
 
 const AdminOrderDetails = () => {
+  const canEdit = useAdminAbility().can("edit", "orders");
   const { orderId } = useParams();
   const navigate = useNavigate();
 
@@ -149,6 +151,7 @@ const AdminOrderDetails = () => {
   const isPending = currentStatus === "pending";
 
   const handleReassignConfirm = ({ rider, note }) => {
+    if (!canEdit) return;
     setOrderState((prev) => ({
       ...prev,
       status: "assigned",
@@ -176,6 +179,7 @@ const AdminOrderDetails = () => {
   };
 
   const handleEscalateConfirm = ({ issue, priority, description }) => {
+    if (!canEdit) return;
     setOrderState((prev) => ({
       ...prev,
       isEscalated: true,
@@ -193,6 +197,7 @@ const AdminOrderDetails = () => {
   };
 
   const handleCancelConfirm = ({ reason }) => {
+    if (!canEdit) return;
     setOrderState((prev) => ({
       ...prev,
       status: "cancelled",
@@ -274,7 +279,7 @@ const AdminOrderDetails = () => {
           </div>
 
           {/* Action Buttons (Screen 3, 7, 9, 10, 11) */}
-          {!isCancelled && (
+          {canEdit && !isCancelled && (
             <div className="flex items-center gap-2.5 flex-wrap">
               {!isDelivered && !isFailed && (
                 <button
@@ -599,21 +604,21 @@ const AdminOrderDetails = () => {
 
       {/* Modals */}
       <ReassignRiderModal
-        isOpen={activeModal === "reassign"}
+        isOpen={canEdit && activeModal === "reassign"}
         onClose={() => setActiveModal(null)}
         order={orderState}
         onConfirm={handleReassignConfirm}
       />
 
       <EscalateIssueModal
-        isOpen={activeModal === "escalate"}
+        isOpen={canEdit && activeModal === "escalate"}
         onClose={() => setActiveModal(null)}
         order={orderState}
         onConfirm={handleEscalateConfirm}
       />
 
       <CancelOrderModal
-        isOpen={activeModal === "cancel"}
+        isOpen={canEdit && activeModal === "cancel"}
         onClose={() => setActiveModal(null)}
         order={orderState}
         onConfirm={handleCancelConfirm}

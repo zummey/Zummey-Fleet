@@ -1,3 +1,4 @@
+import { useAdminAbility } from "../../../../auth/useAdminAbility";
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { PackageCheck } from "lucide-react";
@@ -24,6 +25,7 @@ const SkeletonRows = ({ count }) =>
 
 /** Orders waiting for a rider, shown as one white card per row (Dispatch dashboard). */
 const UnassignedOrders = ({ page, onPageChange }) => {
+  const canEdit = useAdminAbility().can("edit", "dispatch");
   const navigate = useNavigate();
   const { data, isLoading, isError, error, refetch, isFetching, isPlaceholderData } = useUnassignedOrders({
     page,
@@ -88,14 +90,14 @@ const UnassignedOrders = ({ page, onPageChange }) => {
                     <StatusBadge status={order.priority} badges={PRIORITY_BADGES} />
                   </td>
                   <td className={`${CELL} text-right`}>
-                    <button
+                    {canEdit && <button
                       type="button"
                       onClick={() => navigate(`/dispatch-management/${order.id}/assign`)}
                       aria-label={`Assign rider to ${order.id}`}
                       className="rounded-lg bg-[#0B1437] px-4 py-2 text-xs font-medium whitespace-nowrap text-white hover:bg-[#1c2657] focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:outline-none"
                     >
                       Assign Rider
-                    </button>
+                    </button>}
                   </td>
                 </tr>
               ))

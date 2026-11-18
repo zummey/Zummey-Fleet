@@ -1,3 +1,4 @@
+import { useAdminAbility } from "../../../auth/useAdminAbility";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { Radio } from "lucide-react";
 import Avatar from "../components/Avatar";
@@ -7,6 +8,7 @@ import { useConversations } from "../../../api/communications.queries";
 import { MESSAGE_TABS, primaryClass } from "./communications.config";
 
 export default function CommunicationCenter() {
+  const canEdit = useAdminAbility().can("edit", "communications");
   const [params, setParams] = useSearchParams();
   const location = useLocation();
   const tab = MESSAGE_TABS.some((item) => item.id === params.get("tab")) ? params.get("tab") : "customers";
@@ -17,7 +19,7 @@ export default function CommunicationCenter() {
     <div className="space-y-8 font-poppins text-[#343C6A]">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-xl font-semibold">Communication Center</h1>
-        <Link to="/communications/new-broadcast" className={primaryClass}><Radio size={19} /> New Broadcast</Link>
+        {canEdit && <Link to="/communications/new-broadcast" className={primaryClass}><Radio size={19} /> New Broadcast</Link>}
       </div>
       {location.state?.broadcastCreated && <p role="status" className="rounded-lg bg-green-50 p-3 text-sm text-green-800">Broadcast created successfully in demo mode. Live delivery requires a connected communications API.</p>}
       <section>

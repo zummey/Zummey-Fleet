@@ -1,4 +1,6 @@
 import React from "react";
+import { useAdminAbility } from "../../../auth/useAdminAbility";
+import EmptyState from "../components/EmptyState";
 import { useSearchParams } from "react-router-dom";
 import StatsTabs from "./StatsTabs";
 import AdminStatCard from "./AdminStatCard";
@@ -6,7 +8,6 @@ import AdminStatsSkeleton from "./AdminStatsSkeleton";
 import {
   STAT_TABS,
   TAB_QUERY_PARAM,
-  getTabById,
 } from "./adminDashboard.config";
 import { useAdminDashboardStats } from "../../../api/admin.queries";
 
@@ -15,12 +16,16 @@ const gridClassFor = (count) =>
     ? "grid-cols-1 sm:grid-cols-2 xl:grid-cols-4"
     : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3";
 
+const tabScopes = { fleet: "fleets", financial: "finance", operational: "incidents" };
+
 const AdminDashboard = () => {
+  const ability = useAdminAbility();
+  const tabs = STAT_TABS.filter(({ id }) => ability.can("read", tabScopes[id] ?? id));
   const [searchParams, setSearchParams] = useSearchParams();
-  const activeTab = getTabById(searchParams.get(TAB_QUERY_PARAM));
+  const activeTab = tabs.find(({ id }) => id === searchParams.get(TAB_QUERY_PARAM)) ?? tabs[0];
 
   const { data, isLoading, isError, error, refetch, isFetching } =
-    useAdminDashboardStats();
+    useAdminDashboardStats({ enabled: tabs.length > 0 });
 
   const handleTabChange = (id) => {
     setSearchParams(
@@ -33,13 +38,15 @@ const AdminDashboard = () => {
     );
   };
 
+  if (!activeTab) return <EmptyState title="No dashboard statistics available for this role" />;
+
   const gridClass = gridClassFor(activeTab.cards.length);
   const tabStats = data?.[activeTab.id] ?? {};
 
   return (
     <div className="space-y-6 font-poppins mb-6">
       <StatsTabs
-        tabs={STAT_TABS}
+        tabs={tabs}
         activeTab={activeTab.id}
         onChange={handleTabChange}
       />

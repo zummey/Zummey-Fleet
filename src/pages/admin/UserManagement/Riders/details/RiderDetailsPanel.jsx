@@ -1,3 +1,4 @@
+import { useAdminAbility } from "../../../../../auth/useAdminAbility";
 import React, { useEffect, useState } from "react";
 import { Search, AlertTriangle, ChevronRight, FileText } from "lucide-react";
 import StatusBadge from "../../../components/StatusBadge";
@@ -258,6 +259,7 @@ const INCIDENT_STATUS_COLORS = {
 };
 
 const IncidentHistoryPanel = ({ riderId }) => {
+  const canEdit = useAdminAbility().can("edit", "riders");
   const [page, setPage] = useState(1);
   const [selectedIncident, setSelectedIncident] = useState(null);
 
@@ -372,7 +374,7 @@ const IncidentHistoryPanel = ({ riderId }) => {
         <IncidentDetailModal
           incident={selectedIncident}
           onClose={() => setSelectedIncident(null)}
-          onResolve={handleResolve}
+          onResolve={canEdit ? handleResolve : undefined}
         />
       )}
     </>

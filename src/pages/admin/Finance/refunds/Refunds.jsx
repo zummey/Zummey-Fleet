@@ -1,3 +1,4 @@
+import { useAdminAbility } from "../../../../auth/useAdminAbility";
 import React from "react";
 import { RotateCcw } from "lucide-react";
 import InlineActions from "../components/InlineActions";
@@ -21,6 +22,7 @@ import { useRefunds } from "../../../../api/admin.queries";
 import { useReviewRefund } from "../../../../api/admin.mutations";
 
 const Refunds = () => {
+  const canEdit = useAdminAbility().can("edit", "finance");
   const { page, setPage } = useTableParams();
   const refunds = useRefunds({ page, pageSize: FINANCE_PAGE_SIZE });
   const rows = refunds.data?.results ?? [];
@@ -56,7 +58,7 @@ const Refunds = () => {
       render: (r) => (
         <InlineActions
           label={`Actions for refund ${r.id}`}
-          actionIds={REFUND_ACTIONS_BY_STATUS[r.status] ?? []}
+          actionIds={canEdit ? (REFUND_ACTIONS_BY_STATUS[r.status] ?? []) : []}
           actions={REFUND_ACTIONS}
           doneText={refundDoneText(r)}
           onSelect={(decision) => open(decision, r)}

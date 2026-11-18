@@ -6,9 +6,10 @@ import { useLogout } from "../../api/auth.mutations";
 import { clearAuth } from "../../auth/auth.store";
 import { useAdminStore } from "../../store/admin.store";
 import RoleSelect from "./RoleSelect";
+import { scopeForPath } from "../../auth/adminPermissions";
+import { useAdminAbility } from "../../auth/useAdminAbility";
 
 import {
-  ChevronDown,
   LayoutDashboard,
   Truck,
   Users,
@@ -25,6 +26,8 @@ import {
   TriangleAlert,
   ChartColumn,
   Tag,
+  MapPin,
+  ShieldCheck,
 } from "lucide-react";
 
 const MainLayout = () => {
@@ -32,7 +35,7 @@ const MainLayout = () => {
   const [openSubmenu, setOpenSubmenu] = useState(null); // Track which submenu is open
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const isAdmin = useAdminStore((state) => state.isAdmin);
-  const isSuperAdmin = useAdminStore((state) => state.isSuperAdmin);
+  const ability = useAdminAbility();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -41,7 +44,7 @@ const MainLayout = () => {
 
   const initials = firstName.slice(0, 2).toUpperCase();
 
-  const navItems = [
+  const allNavItems = [
     {
       path: "/dashboard",
       icon: LayoutDashboard,
@@ -96,13 +99,26 @@ const MainLayout = () => {
       ]
       : []),
     // Super admin only
-    ...(isSuperAdmin ? [{ path: "/pricing-management", icon: Tag, label: "Pricing Management" }] : []),
+    ...(isAdmin ? [
+      { path: "/live-tracking", icon: MapPin, label: "Live Tracking" },
+      { path: "/pricing-management", icon: Tag, label: "Pricing Management" },
+      { path: "/admin-management", icon: ShieldCheck, label: "Admin Management" },
+    ] : []),
     {
       path: "/finance-reports",
       icon: CreditCard,
       label: "Finance & Reports",
     },
   ];
+
+  const canOpen = ({ path }) => !scopeForPath(path) || ability.can("read", scopeForPath(path));
+  const navItems = isAdmin
+    ? allNavItems.filter(canOpen).flatMap((item) => {
+        if (!item.submenuItems) return [item];
+        const submenuItems = item.submenuItems.filter(canOpen);
+        return submenuItems.length ? [{ ...item, submenuItems }] : [];
+      })
+    : allNavItems;
 
   const bottomNavItems = [
     { path: "/notifications", icon: Bell, label: "Notifications" },
@@ -146,7 +162,7 @@ const MainLayout = () => {
     );
     if (parent) setOpenSubmenu(parent.path);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- nav items are rebuilt every render
-  }, [location.pathname, isAdmin]);
+  }, [location.pathname, isAdmin, ability]);
 
   const isActive = (path) => {
     return location.pathname === path || location.pathname.startsWith(path);
