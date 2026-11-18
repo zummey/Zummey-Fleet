@@ -1,3 +1,4 @@
+import { requireAdminEdit } from "../auth/useAdminAbility";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   assignOrder,
@@ -19,7 +20,10 @@ export const useSubmitFleetReview = () => {
 
   return useMutation({
     mutationKey: ["admin", "submitFleetReview"],
-    mutationFn: submitFleetReview,
+    mutationFn: (payload) => {
+      requireAdminEdit("fleets");
+      return submitFleetReview(payload);
+    },
     onSuccess: () => {
       // Status changes affect the fleet list, the details page and the dashboard counts
       queryClient.invalidateQueries({ queryKey: ["admin", "fleets"] });
@@ -41,7 +45,10 @@ export const useSubmitRiderReview = () => {
 
   return useMutation({
     mutationKey: ["admin", "submitRiderReview"],
-    mutationFn: submitRiderReview,
+    mutationFn: (payload) => {
+      requireAdminEdit("riders");
+      return submitRiderReview(payload);
+    },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["admin", "riders"] });
       queryClient.invalidateQueries({ queryKey: ["admin", "riders", "detail", variables.riderId] });
@@ -64,7 +71,10 @@ export const useUpdateCustomerStatus = () => {
 
   return useMutation({
     mutationKey: ["admin", "updateCustomerStatus"],
-    mutationFn: updateCustomerStatus,
+    mutationFn: (payload) => {
+      requireAdminEdit("customers");
+      return updateCustomerStatus(payload);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "customers"] });
       queryClient.invalidateQueries({ queryKey: ["admin", "dashboard"] });
@@ -85,7 +95,10 @@ export const useDeleteCustomer = () => {
 
   return useMutation({
     mutationKey: ["admin", "deleteCustomer"],
-    mutationFn: deleteCustomer,
+    mutationFn: (payload) => {
+      requireAdminEdit("customers");
+      return deleteCustomer(payload);
+    },
     onSuccess: (_data, { customerId }) => {
       queryClient.removeQueries({ queryKey: ["admin", "customers", "detail", customerId] });
       queryClient.invalidateQueries({ queryKey: ["admin", "customers"] });
@@ -107,7 +120,10 @@ export const useUpdatePayout = () => {
 
   return useMutation({
     mutationKey: ["admin", "updatePayout"],
-    mutationFn: updatePayout,
+    mutationFn: (payload) => {
+      requireAdminEdit("finance");
+      return updatePayout(payload);
+    },
     onSuccess: () => {
       // Releasing records a transaction and changes the overview totals
       queryClient.invalidateQueries({ queryKey: ["admin", "finance"] });
@@ -128,7 +144,10 @@ export const useReviewRefund = () => {
 
   return useMutation({
     mutationKey: ["admin", "reviewRefund"],
-    mutationFn: reviewRefund,
+    mutationFn: (payload) => {
+      requireAdminEdit("finance");
+      return reviewRefund(payload);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "finance"] });
     },
@@ -148,7 +167,10 @@ export const useAssignOrder = () => {
 
   return useMutation({
     mutationKey: ["admin", "assignOrder"],
-    mutationFn: assignOrder,
+    mutationFn: (payload) => {
+      requireAdminEdit("dispatch");
+      return assignOrder(payload);
+    },
     onSuccess: (_data, { orderId }) => {
       // Mark the order stale without refetching it: the assign page is still mounted and
       // the order is no longer "waiting for dispatch", so a refetch would flash an error.

@@ -1,3 +1,4 @@
+import { useAdminAbility, requireAdminEdit } from "../../../../auth/useAdminAbility";
 import React, { useId, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { CheckCircle2 } from "lucide-react";
@@ -76,6 +77,7 @@ const SummaryRow = ({ label, value, detail }) => (
 
 /** Report builder: pick a report, a date range and a file format, then download it. */
 const AnalyticsReports = () => {
+  const canEdit = useAdminAbility().can("edit", "analytics");
   const [reportId, setReportId] = useState(null);
   const [presetId, setPresetId] = useState(null);
   const [fromText, setFromText] = useState("");
@@ -97,6 +99,7 @@ const AnalyticsReports = () => {
   const creator = useMutation({
     mutationKey: ["admin", "analytics", "report"],
     mutationFn: async () => {
+      requireAdminEdit("analytics");
       const { rows } = await generateReport({ report: report.id, from: toIso(range.from), to: toIso(range.to) });
       await exportRows({
         format: format.id,
@@ -277,7 +280,7 @@ const AnalyticsReports = () => {
         <button
           type="button"
           onClick={() => creator.mutate()}
-          disabled={!canCreate}
+          disabled={!canEdit || !canCreate}
           className="mt-5 w-full rounded-lg bg-[#0B1437] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#1c2657] focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:outline-none disabled:cursor-not-allowed disabled:bg-gray-300"
         >
           {creator.isPending ? "Creating report..." : "Create report"}

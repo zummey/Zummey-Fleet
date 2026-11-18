@@ -1,3 +1,4 @@
+import { useAdminAbility } from "../../../../auth/useAdminAbility";
 import React, { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Users } from "lucide-react";
@@ -31,6 +32,7 @@ import { exportCustomers } from "../../../../api/admin.service";
 const summaryTab = getTabById(CUSTOMERS_SUMMARY_TAB_ID);
 
 const Customers = () => {
+  const canEdit = useAdminAbility().can("edit", "customers");
   const table = useTableParams({ filterGroups: CUSTOMER_FILTER_GROUPS, keys: CUSTOMER_QUERY_PARAMS });
   const { page, search, filters } = table;
   const query = { search, ...toCustomerQuery(filters) };
@@ -193,7 +195,7 @@ const Customers = () => {
                           <td className="py-4 text-right">
                             <RowActionsMenu
                               label={`Actions for ${customer.name}`}
-                              actions={getCustomerRowActions(customer)}
+                              actions={getCustomerRowActions(customer).filter(({ id }) => canEdit || ["view", "complaints", "payments"].includes(id))}
                               onSelect={(actionId) => handleAction(actionId, customer)}
                             />
                           </td>

@@ -1,3 +1,4 @@
+import { useAdminAbility } from "../../../../../auth/useAdminAbility";
 import React, { useState } from "react";
 import { CheckCircle2, CircleX, RotateCcw } from "lucide-react";
 import { RIDER_STAT_FIELDS } from "./riderDetails.config";
@@ -32,6 +33,7 @@ const RiderAvatar = ({ rider }) => {
 };
 
 const RiderProfileCard = ({ rider, onAction }) => {
+  const canEdit = useAdminAbility().can("edit", "riders");
   const isApproved = rider.status === "active" || rider.status === "online";
   const isSuspended = rider.status === "suspended";
 
@@ -53,7 +55,7 @@ const RiderProfileCard = ({ rider, onAction }) => {
           </div>
 
           {/* Approve button */}
-          <button
+          {canEdit && <button
             id="rider-action-approve"
             type="button"
             onClick={() => onAction("approve", rider)}
@@ -65,11 +67,11 @@ const RiderProfileCard = ({ rider, onAction }) => {
           >
             <CheckCircle2 size={15} />
             Approve
-          </button>
+          </button>}
         </div>
 
         {/* Suspend + Reactivate buttons */}
-        <div className="flex flex-wrap items-center gap-2">
+        {canEdit && <div className="flex flex-wrap items-center gap-2">
           <button
             id="rider-action-suspend"
             type="button"
@@ -89,7 +91,7 @@ const RiderProfileCard = ({ rider, onAction }) => {
             <RotateCcw size={15} />
             Reactivate
           </button>
-        </div>
+        </div>}
       </div>
 
       {/* ── Row 2: stat fields (Rider Type / Fleet / Rating / Deliveries) ── */}

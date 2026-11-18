@@ -1,3 +1,4 @@
+import { useAdminAbility } from "../../../../auth/useAdminAbility";
 import React, { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -54,6 +55,7 @@ const DetailsSkeleton = () => (
 );
 
 const IncidentDetails = () => {
+  const canEdit = useAdminAbility().can("edit", "incidents");
   const { incidentId } = useParams();
   const { data: incident, isLoading, isError, error, refetch, isFetching } = useIncident(incidentId);
   const [dialog, setDialog] = useState(null); // "assign" | "escalate" | "resolve" | "close" | null
@@ -83,7 +85,7 @@ const IncidentDetails = () => {
   }
 
   const banner = incident ? statusBanner(incident) : null;
-  const actions = incident ? ACTIONS_BY_STATUS[incident.status] ?? [] : [];
+  const actions = canEdit && incident ? ACTIONS_BY_STATUS[incident.status] ?? [] : [];
   const priority = incident ? PRIORITY_BADGES[incident.priority] : null;
   const dialogProps = { isPending: active?.isPending, error: active?.error, onClose: closeDialog };
 
@@ -140,7 +142,7 @@ const IncidentDetails = () => {
           <div className="min-w-0 space-y-5">
             <DescriptionCard incident={incident} />
             <AttachedImages images={incident.images} />
-            <CommunicationLog incident={incident} readOnly={incident.status === "closed"} />
+            <CommunicationLog incident={incident} readOnly={!canEdit || incident.status === "closed"} />
           </div>
           <div className="lg:sticky lg:top-4">
             <IncidentTimeline events={incident.timeline} isClosed={incident.status === "closed"} />
@@ -148,11 +150,11 @@ const IncidentDetails = () => {
         </div>
       )}
 
-      {dialog === "assign" && (
+      {canEdit && dialog === "assign" && (
         <AssignIncidentModal incident={incident} {...dialogProps} onConfirm={run} />
       )}
 
-      {dialog === "escalate" && (
+      {canEdit && dialog === "escalate" && (
         <ReasonDialog
           {...DIALOGS.escalate}
           title={DIALOGS.escalate.title(incident)}
@@ -164,7 +166,7 @@ const IncidentDetails = () => {
         />
       )}
 
-      {dialog === "resolve" && (
+      {canEdit && dialog === "resolve" && (
         <ReasonDialog
           {...DIALOGS.resolve}
           title={DIALOGS.resolve.title(incident)}
@@ -176,7 +178,7 @@ const IncidentDetails = () => {
         />
       )}
 
-      {dialog === "close" && (
+      {canEdit && dialog === "close" && (
         <ConfirmDialog
           {...DIALOGS.close}
           title={DIALOGS.close.title(incident)}

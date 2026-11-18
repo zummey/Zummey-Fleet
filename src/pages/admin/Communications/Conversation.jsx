@@ -1,3 +1,4 @@
+import { useAdminAbility } from "../../../auth/useAdminAbility";
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, FileText, MessageSquare, Megaphone, Paperclip, Send, X } from "lucide-react";
@@ -8,6 +9,7 @@ import { useSendReply } from "../../../api/communications.mutations";
 import { cardClass, inputClass, primaryClass } from "./communications.config";
 
 export default function Conversation() {
+  const canEdit = useAdminAbility().can("edit", "communications");
   const { conversationId } = useParams();
   const query = useConversation(conversationId);
   const reply = useSendReply();
@@ -42,7 +44,7 @@ export default function Conversation() {
               </div>)}
               <div ref={bottom} />
             </div>
-            <form onSubmit={submit} className="space-y-3 border-t border-[#E3E9F6] p-4">
+            {canEdit && <form onSubmit={submit} className="space-y-3 border-t border-[#E3E9F6] p-4">
               {reply.isError && <ErrorBox error={reply.error} />}
               {fileError && <p role="alert" className="text-xs text-red-600">{fileError}</p>}
               {file && <div className="flex items-center gap-2 text-xs"><FileText size={15} /><span className="min-w-0 truncate">{file.name}</span><button type="button" aria-label="Remove attachment" disabled={reply.isPending} onClick={() => { setFile(null); fileInput.current.value = ""; }}><X size={15} /></button></div>}
@@ -56,7 +58,7 @@ export default function Conversation() {
                 <input aria-label="Message" value={text} onChange={(event) => setText(event.target.value)} disabled={reply.isPending} placeholder="Type a message" className={inputClass} />
                 <button aria-label="Send message" disabled={reply.isPending || (!text.trim() && !file)} className={`${primaryClass} px-4`}><Send size={19} /></button>
               </div>
-            </form>
+            </form>}
           </section>
           <aside className="space-y-5">
             <section className={cardClass}><h2 className="mb-5 font-semibold">Contact</h2><dl className="space-y-4 text-xs"><div className="flex flex-wrap justify-between gap-2"><dt className="text-[#7182A4]">Phone</dt><dd><a href={`tel:${conversation.phone.replaceAll(" ", "")}`} className="hover:underline">{conversation.phone}</a></dd></div><div className="flex flex-wrap justify-between gap-2"><dt className="text-[#7182A4]">Email</dt><dd className="break-all"><a href={`mailto:${conversation.email}`} className="hover:underline">{conversation.email}</a></dd></div></dl></section>

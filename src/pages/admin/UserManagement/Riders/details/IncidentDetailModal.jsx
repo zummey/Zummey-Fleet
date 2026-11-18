@@ -169,7 +169,7 @@ const IncidentDetailModal = ({ incident, onClose, onResolve }) => {
           >
             Close
           </button>
-          {incident.status?.toLowerCase() !== "resolved" && (
+          {onResolve && incident.status?.toLowerCase() !== "resolved" && (
             <button
               id="incident-modal-resolve-btn"
               type="button"

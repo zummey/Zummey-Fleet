@@ -1,3 +1,4 @@
+import { useAdminAbility } from "../../../../auth/useAdminAbility";
 import React from "react";
 import { Wallet } from "lucide-react";
 import InlineActions from "../components/InlineActions";
@@ -24,6 +25,7 @@ import { usePayouts } from "../../../../api/admin.queries";
 import { useUpdatePayout } from "../../../../api/admin.mutations";
 
 const Payouts = () => {
+  const canEdit = useAdminAbility().can("edit", "finance");
   const { page, setPage } = useTableParams();
   const payouts = usePayouts({ page, pageSize: FINANCE_PAGE_SIZE });
   const rows = payouts.data?.results ?? [];
@@ -60,7 +62,7 @@ const Payouts = () => {
       render: (p) => (
         <InlineActions
           label={`Actions for ${p.recipient.name}'s payout`}
-          actionIds={PAYOUT_ACTIONS_BY_STATUS[p.status] ?? []}
+          actionIds={canEdit ? (PAYOUT_ACTIONS_BY_STATUS[p.status] ?? []) : []}
           actions={PAYOUT_ACTIONS}
           doneText={payoutDoneText(p)}
           onSelect={(action) => open(action, p)}

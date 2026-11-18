@@ -1,4 +1,5 @@
 import React from 'react';
+import { useAdminAbility } from "../../auth/useAdminAbility";
 import Overview from './Overview/Overview';
 import ActiveVehicles from './ActiveVehicles/ActiveVehicles';
 import OngoingOrder from './OngoingOrder/OngoingOrder';
@@ -9,11 +10,13 @@ import { useAdminStore } from '../../store/admin.store';
 const Dashboard = () => {
   const isAdmin = useAdminStore((state) => state.isAdmin);
 
+  const ability = useAdminAbility();
+
   if (isAdmin) {
     return (
       <>
       <AdminDashboard />
-      <OngoingOrder/>
+      {ability.can("read", "orders") && <OngoingOrder />}
       </>
     );
   }

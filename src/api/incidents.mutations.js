@@ -1,3 +1,4 @@
+import { requireAdminEdit } from "../auth/useAdminAbility";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   addIncidentNote,
@@ -17,7 +18,10 @@ const useIncidentMutation = (name, mutationFn, { refreshLists = true } = {}) => 
 
   return useMutation({
     mutationKey: ["admin", name],
-    mutationFn,
+    mutationFn: (payload) => {
+      requireAdminEdit("incidents");
+      return mutationFn(payload);
+    },
     onSuccess: (incident) => {
       queryClient.setQueryData(incidentKeys.detail(incident.id), incident);
       if (refreshLists) {
