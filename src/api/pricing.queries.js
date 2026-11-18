@@ -1,10 +1,20 @@
 import { useQuery } from "@tanstack/react-query";
-import { getPriceList, getPricingRates, getSurgeRules } from "./pricing.service";
+import {
+  getCampaigns,
+  getCoupons,
+  getDiscountRules,
+  getPriceList,
+  getPricingRates,
+  getSurgeRules,
+} from "./pricing.service";
 
 export const pricingKeys = {
   all: ["admin", "pricing"],
   rates: ["admin", "pricing", "rates"],
   surgeRules: ["admin", "pricing", "surge-rules"],
+  coupons: ["admin", "pricing", "coupons"],
+  campaigns: ["admin", "pricing", "campaigns"],
+  discountRules: ["admin", "pricing", "discount-rules"],
 };
 
 export const usePricingRates = () =>
@@ -23,3 +33,12 @@ export const usePriceList = (section) =>
     staleTime: 60 * 1000,
     retry: 2,
   });
+
+export const useCoupons = () =>
+  useQuery({ queryKey: pricingKeys.coupons, queryFn: getCoupons, staleTime: 60 * 1000, retry: 2 });
+
+export const useCampaigns = () =>
+  useQuery({ queryKey: pricingKeys.campaigns, queryFn: getCampaigns, staleTime: 60 * 1000, retry: 2 });
+
+export const useDiscountRules = () =>
+  useQuery({ queryKey: pricingKeys.discountRules, queryFn: getDiscountRules, staleTime: 60 * 1000, retry: 2 });
