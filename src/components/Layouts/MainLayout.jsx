@@ -5,7 +5,7 @@ import { getNotifications } from "../../api/notifications.service";
 import { useLogout } from "../../api/auth.mutations";
 import { clearAuth } from "../../auth/auth.store";
 import { useAdminStore } from "../../store/admin.store";
-import Switch from "../Ui/Switch";
+import RoleSelect from "./RoleSelect";
 
 import {
   ChevronDown,
@@ -24,6 +24,7 @@ import {
   MessagesSquare,
   TriangleAlert,
   ChartColumn,
+  Tag,
 } from "lucide-react";
 
 const MainLayout = () => {
@@ -31,7 +32,7 @@ const MainLayout = () => {
   const [openSubmenu, setOpenSubmenu] = useState(null); // Track which submenu is open
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const isAdmin = useAdminStore((state) => state.isAdmin);
-  const setIsAdmin = useAdminStore((state) => state.setIsAdmin);
+  const isSuperAdmin = useAdminStore((state) => state.isSuperAdmin);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -94,6 +95,8 @@ const MainLayout = () => {
         { path: "/analytics-management", icon: ChartColumn, label: "Analytics Management" },
       ]
       : []),
+    // Super admin only
+    ...(isSuperAdmin ? [{ path: "/pricing-management", icon: Tag, label: "Pricing Management" }] : []),
     {
       path: "/finance-reports",
       icon: CreditCard,
@@ -429,7 +432,7 @@ const MainLayout = () => {
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
               </button>
 
-              <Switch checked={isAdmin} onChange={setIsAdmin} label="Admin" />
+              <RoleSelect />
 
               <div className="w-10 h-10 rounded-full border-2 border-gray-200 cursor-pointer hover:border-[#EB4827] transition-colors flex items-center justify-center bg-[#FFF4E8] text-gray-900 font-semibold">
                 {initials || "?"}
