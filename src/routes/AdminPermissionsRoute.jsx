@@ -11,7 +11,7 @@ export function AdminPermissionsRoute() {
   const path = normalizeAdminPath(pathname);
   const scope = scopeForPath(path);
 
-  if (!isAdmin && (/^\/(admin-management|pricing-management|live-tracking|admin)(\/|$)/i.test(path))) {
+  if (!isAdmin && (/^\/(admin-management|platform-settings|pricing-management|live-tracking|admin)(\/|$)/i.test(path))) {
     return <Navigate to="/dashboard" replace />;
   }
   if (isAdmin && path.startsWith("/riders-management/add-rider/")) {

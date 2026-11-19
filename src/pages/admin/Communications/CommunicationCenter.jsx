@@ -16,8 +16,8 @@ export default function CommunicationCenter() {
   const conversations = query.data ?? [];
   const rows = conversations.filter((item) => item.group === tab);
   return (
-    <div className="space-y-8 font-poppins text-[#343C6A]">
-      <div className="flex flex-wrap items-center justify-between gap-4">
+    <div className="space-y-6 font-poppins text-[#343C6A]">
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <h1 className="text-xl font-semibold">Communication Center</h1>
         {canEdit && <Link to="/communications/new-broadcast" className={primaryClass}><Radio size={19} /> New Broadcast</Link>}
       </div>

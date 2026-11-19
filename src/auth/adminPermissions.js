@@ -12,7 +12,7 @@ export const MODULES = {
   analytics: "Analytics",
 };
 
-export const LOCKED_MODULES = { pricing: "Pricing", admins: "Admin Management" };
+export const LOCKED_MODULES = { pricing: "Pricing", admins: "Admin Management", platformSettings: "Platform Settings" };
 export const ACCESS = { none: "No access", read: "View only", edit: "Can edit" };
 
 export const ADMIN_ROLES = {
@@ -56,6 +56,7 @@ export function createAdminAbility(role, custom) {
 const routeScopes = [
   ["/admin-management", "admins"],
   ["/pricing-management", "pricing"],
+  ["/platform-settings", "platformSettings"],
   ["/user-management/customers", "customers"],
   ["/user-management/riders", "riders"],
   ["/riders-management", "riders"],

@@ -28,6 +28,7 @@ import {
   Tag,
   MapPin,
   ShieldCheck,
+  MonitorCog
 } from "lucide-react";
 
 const MainLayout = () => {
@@ -103,6 +104,7 @@ const MainLayout = () => {
       { path: "/live-tracking", icon: MapPin, label: "Live Tracking" },
       { path: "/pricing-management", icon: Tag, label: "Pricing Management" },
       { path: "/admin-management", icon: ShieldCheck, label: "Admin Management" },
+      { path: "/platform-settings", icon: MonitorCog, label: "Platform Settings" },
     ] : []),
     {
       path: "/finance-reports",
@@ -196,8 +198,8 @@ const MainLayout = () => {
     <div className="flex h-screen bg-gray-50 overflow-hidden font-poppins">
       <aside
         className={`
-          ${sidebarCollapsed ? "w-20" : "w-64"} 
-          bg-white border-r border-gray-200 
+          ${sidebarCollapsed ? "w-20" : "w-64"}
+          bg-white border-r border-gray-200
           flex flex-col transition-all duration-300 ease-in-out
           relative z-50
         `}

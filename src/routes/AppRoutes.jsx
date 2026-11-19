@@ -48,6 +48,7 @@ import NewBroadcast from "../pages/admin/Communications/NewBroadcast";
 import AdminIncidents from "../pages/admin/Incidents/AdminIncidents";
 import IncidentDetails from "../pages/admin/Incidents/details/IncidentDetails";
 import AdminAnalytics from "../pages/admin/Analytics/AdminAnalytics";
+import PlatformSettings from "../pages/superadmin/PlatformSettings/PlatformSettings";
 import SuperAdminPricing from "../pages/superadmin/Pricing/SuperAdminPricing";
 
 const AppRoutes = () => {
@@ -160,6 +161,7 @@ const AppRoutes = () => {
                   <Route path="/incident-management" element={<AdminSwitch admin={<AdminIncidents />} fallback={<Navigate to="/dashboard" replace />} />} />
                   <Route path="/incident-management/:incidentId" element={<AdminSwitch admin={<IncidentDetails />} fallback={<Navigate to="/dashboard" replace />} />} />
                   <Route path="/analytics-management" element={<AdminSwitch admin={<AdminAnalytics />} fallback={<Navigate to="/dashboard" replace />} />} />
+                  <Route path="/platform-settings" element={<PlatformSettings />} />
                   <Route path="/pricing-management" element={<SuperAdminPricing />} />
                   <Route path="/communications/:conversationId" element={<AdminSwitch admin={<Conversation />} fallback={<Navigate to="/dashboard" replace />} />} />
                 </Route>

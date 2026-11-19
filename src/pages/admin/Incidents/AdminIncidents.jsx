@@ -71,7 +71,7 @@ const AdminIncidents = () => {
   ];
 
   return (
-    <div className="space-y-5 p-4 font-poppins sm:p-6">
+    <div className="space-y-5 font-poppins">
       <h1 className="text-xl font-semibold text-[#343C6A]">Incident Management</h1>
 
       <section className="rounded-2xl bg-white p-5 sm:p-6">
