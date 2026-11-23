@@ -35,7 +35,7 @@ const AdminDispatch = () => {
     );
 
   return (
-    <div className="space-y-6 p-4 font-poppins sm:p-6">
+    <div className="space-y-6 font-poppins">
       <h1 className="text-xl font-semibold text-[#343C6A]">Dispatch Management</h1>
 
       {assigned && (
